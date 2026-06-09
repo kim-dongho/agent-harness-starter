@@ -21,6 +21,8 @@ export async function setupDotnet(dir: string): Promise<void> {
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>app</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
 </Project>
