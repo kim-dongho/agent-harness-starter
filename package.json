@@ -4,6 +4,7 @@
   "description": "Scaffold projects with AI agent rules",
   "type": "module",
   "bin": {
+    "agent-harness-starter": "./dist/cli.js",
     "create-ahs": "./dist/cli.js"
   },
   "files": [
