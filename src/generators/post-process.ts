@@ -142,16 +142,8 @@ async function scaffoldFrontendArchitecture(srcDir: string, arch: string): Promi
   switch (arch) {
     case 'fsd': {
       // Feature-Sliced Design
-      // CLI가 만든 기본 폴더 중 FSD와 충돌하는 것 제거
-      for (const obsolete of ['views', 'stores', 'components', 'router']) {
-        const target = path.join(srcDir, obsolete);
-        if (await fs.pathExists(target)) await fs.remove(target);
-      }
-
+      // FSD 레이어 폴더만 추가 — CLI가 만든 기본 파일은 유지
       const layers = ['app', 'pages', 'widgets', 'features', 'entities', 'shared'];
-      for (const layer of layers) {
-        await fs.ensureDir(path.join(srcDir, layer));
-      }
       // shared 하위 구조
       for (const sub of ['ui', 'lib', 'api', 'config', 'types']) {
         await fs.ensureDir(path.join(srcDir, 'shared', sub));
