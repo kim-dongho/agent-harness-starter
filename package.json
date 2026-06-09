@@ -1,5 +1,5 @@
 {
-  "name": "agent-harness-starter",
+  "name": "@frontend-playground/agent-harness-starter",
   "version": "0.1.0",
   "description": "Scaffold projects with AI agent rules",
   "type": "module",
@@ -20,7 +20,8 @@
     "test:monorepo": "tsx scripts/test-stacks.ts monorepo",
     "test:clean": "tsx scripts/test-stacks.ts --clean",
     "test:docker": "tsx scripts/test-docker.ts",
-    "test:docker:clean": "tsx scripts/test-docker.ts --clean"
+    "test:docker:clean": "tsx scripts/test-docker.ts --clean",
+    "publish:gitlab": "npm run build && npm publish --//gitlab.dtechlab.com/api/v4/projects/128/packages/npm/:_authToken=$GITLAB_PROJECT_TOKEN"
   },
   "keywords": [
     "cli",
@@ -30,6 +31,9 @@
   ],
   "author": "",
   "license": "ISC",
+  "publishConfig": {
+    "@frontend-playground:registry": "https://gitlab.dtechlab.com/api/v4/projects/128/packages/npm/"
+  },
   "dependencies": {
     "@clack/prompts": "^1.5.1",
     "commander": "^15.0.0",
