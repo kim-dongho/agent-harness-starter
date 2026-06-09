@@ -22,7 +22,8 @@
     "test:clean": "tsx scripts/test-stacks.ts --clean",
     "test:docker": "tsx scripts/test-docker.ts",
     "test:docker:clean": "tsx scripts/test-docker.ts --clean",
-    "publish:gitlab": "npm run build && npm publish --//gitlab.dtechlab.com/api/v4/projects/128/packages/npm/:_authToken=$GITLAB_FP_PROJECT_TOKEN"
+    "publish:gitlab": "npm run build && npm publish --//gitlab.dtechlab.com/api/v4/projects/128/packages/npm/:_authToken=$GITLAB_FP_PROJECT_TOKEN",
+    "semantic-release": "semantic-release"
   },
   "keywords": [
     "cli",
@@ -42,8 +43,15 @@
     "picocolors": "^1.1.1"
   },
   "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/gitlab": "^13.3.2",
+    "@semantic-release/npm": "^13.1.5",
+    "@semantic-release/release-notes-generator": "^14.1.1",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^25.9.1",
+    "semantic-release": "^25.0.3",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   }
