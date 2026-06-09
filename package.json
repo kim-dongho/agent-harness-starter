@@ -22,7 +22,7 @@
     "test:clean": "tsx scripts/test-stacks.ts --clean",
     "test:docker": "tsx scripts/test-docker.ts",
     "test:docker:clean": "tsx scripts/test-docker.ts --clean",
-    "publish:gitlab": "npm run build && npm publish --//gitlab.dtechlab.com/api/v4/projects/128/packages/npm/:_authToken=$GITLAB_PROJECT_TOKEN"
+    "publish:gitlab": "npm run build && npm publish --//gitlab.dtechlab.com/api/v4/projects/128/packages/npm/:_authToken=$GITLAB_FP_PROJECT_TOKEN"
   },
   "keywords": [
     "cli",

@@ -185,6 +185,20 @@ my-project/
 | React       | [React Docs](https://react.dev/)                                                                                                       |
 | Agent Rules | [PatrickJS/awesome-cursorrules](https://github.com/PatrickJS/awesome-cursorrules), [block/ai-rules](https://github.com/block/ai-rules) |
 
+## 설치 (패키지 사용자)
+
+글로벌 `~/.npmrc`에 registry 설정이 필요합니다. (최초 1회)
+
+```bash
+echo -e '@frontend-playground:registry=https://gitlab.dtechlab.com/api/v4/projects/128/packages/npm/\n//gitlab.dtechlab.com/api/v4/projects/128/packages/npm/:_authToken=${GITLAB_FP_NPM_DEPLOY_TOKEN}' >> ~/.npmrc
+```
+
+환경변수 `GITLAB_FP_NPM_DEPLOY_TOKEN`은 Passbolt에 등록되어 있습니다. `~/.zshrc`에 추가하세요.
+
+```bash
+npx @frontend-playground/agent-harness-starter
+```
+
 ## 개발
 
 ```bash
@@ -207,6 +221,14 @@ npm run test:docker
 npx tsx scripts/test-docker.ts monorepo
 npx tsx scripts/test-docker.ts go
 npx tsx scripts/test-docker.ts astro
+```
+
+## 배포
+
+`GITLAB_FP_PROJECT_TOKEN` 환경변수가 필요합니다. Passbolt에 등록되어 있습니다.
+
+```bash
+npm version patch && npm run publish:gitlab
 ```
 
 ## 프로젝트 구조
