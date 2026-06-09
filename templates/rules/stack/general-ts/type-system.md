@@ -1,0 +1,12 @@
+# TypeScript — 타입 시스템
+- `tsconfig.json`에 `strict: true`를 활성화한다.
+- `any` 사용 금지 — `unknown` + 타입 가드, 또는 구체적 타입을 정의한다.
+- 상태 관리에 discriminated union을 사용한다 — `{ status: 'loading' } | { status: 'success'; data: T } | { status: 'error'; error: Error }`.
+- export되는 함수에는 반환 타입을 명시한다.
+- `interface`는 확장 가능한 객체 형태에, `type`은 union/intersection/계산된 타입에 사용한다.
+- 리터럴 값 보존이 필요하면 `as const`를 사용한다.
+- `satisfies` 연산자로 타입 검증하면서 좁은 추론 타입을 유지한다.
+- 변경 불가한 값에 `readonly`를 적용한다.
+- `enum` 지양 — `as const` 객체 또는 string literal union 사용.
+- 제네릭 제약(`<T extends SomeType>`)으로 재사용 가능하면서 타입 안전한 함수를 작성한다.
+- `Partial`, `Pick`, `Omit`, `Record` 등 내장 유틸리티 타입을 활용한다. 수동 재정의 지양.

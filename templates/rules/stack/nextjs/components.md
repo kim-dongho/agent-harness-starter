@@ -1,0 +1,11 @@
+# Next.js — 컴포넌트
+- 기본은 Server Component. 브라우저 API, state, effect, 이벤트 핸들러가 필요할 때만 `"use client"` 선언.
+- `"use client"` 경계는 컴포넌트 트리에서 최대한 아래쪽에 둔다.
+- `loading.tsx`로 스트리밍 + 즉시 로딩 상태를 제공한다.
+- `error.tsx`로 라우트 레벨 에러 바운더리, `not-found.tsx`로 404를 처리한다.
+- Route Groups(`(marketing)`)로 URL에 영향 없이 라우트를 논리적으로 구성한다.
+- Client Component에서 서버 전용 모듈(`fs`, `db`, `server-only`)을 import하지 않는다.
+- Server Component에서 `useState`, `useEffect` 등 클라이언트 훅을 사용하지 않는다.
+- `next/image` 없이 `<img>` 태그를 직접 사용하지 않는다.
+- `next/link` 없이 `<a>` 태그로 내부 라우팅을 하지 않는다.
+- `getServerSideProps`/`getStaticProps`를 App Router에서 사용하지 않는다 — Server Component 또는 Route Handler를 사용한다.

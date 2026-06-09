@@ -1,0 +1,45 @@
+{
+  "name": "agent-harness-starter",
+  "version": "0.1.0",
+  "description": "Scaffold projects with AI agent rules",
+  "type": "module",
+  "bin": {
+    "create-ahs": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli.ts",
+    "test": "tsx scripts/test-stacks.ts",
+    "test:frontend": "tsx scripts/test-stacks.ts frontend",
+    "test:backend": "tsx scripts/test-stacks.ts backend",
+    "test:blockchain": "tsx scripts/test-stacks.ts blockchain",
+    "test:monorepo": "tsx scripts/test-stacks.ts monorepo",
+    "test:clean": "tsx scripts/test-stacks.ts --clean",
+    "test:docker": "tsx scripts/test-docker.ts",
+    "test:docker:clean": "tsx scripts/test-docker.ts --clean"
+  },
+  "keywords": [
+    "cli",
+    "scaffold",
+    "harness",
+    "ai-agent"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@clack/prompts": "^1.5.1",
+    "commander": "^15.0.0",
+    "fs-extra": "^11.3.5",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^25.9.1",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  }
+}

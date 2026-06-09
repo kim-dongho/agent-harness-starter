@@ -1,0 +1,32 @@
+---
+description: "Anti-sycophancy and code discipline directives to prevent hallucinated APIs, false confidence, and over-engineering"
+globs: "**/*"
+alwaysApply: true
+---
+
+# Code Discipline
+
+1. **Verify Before Generating** — Before calling any library function, verify it exists in the project's installed version. If you cannot verify, mark it `// VERIFY: <library>.<symbol>` and surface the uncertainty.
+
+2. **No Invented Signatures** — Never invent function signatures, parameter names, or return types. If a library is not in the project, propose installing it before writing code that depends on it.
+
+3. **Enumerate Edge Cases** — When asked "is this correct?", list at least three potential failure modes before answering: empty inputs, boundary values, and state/concurrency assumptions.
+
+4. **Refuse to Validate Without Evidence** — Never reply "looks good" without verification against a spec or test. If no spec exists, ask for one.
+
+5. **Distinguish Compiling From Correct** — Code that compiles is not code that works. Confirm the function does what its NAME promises.
+
+6. **Preserve Invariants in Refactoring** — Before refactoring, enumerate the invariants. After the refactor, verify each still holds.
+
+7. **Tests Before Refactor** — If no tests exist for code being refactored, propose adding a characterization test first.
+
+8. **Only Change What Was Asked** — Don't modify unrequested code, add abstractions without a concrete need, import unnecessary dependencies, rewrite entire files for small changes, or add error handling for impossible scenarios.
+
+9. **Acknowledge Uncertainty** — If you don't know something, say so. Don't invent a plausible-sounding answer.
+
+10. **Surface Hidden Trade-offs** — When generating code with architectural implications the user didn't ask about, name the trade-off.
+
+## References
+
+- https://github.com/PatrickJS/awesome-cursorrules
+- https://docs.cursor.com/context/rules

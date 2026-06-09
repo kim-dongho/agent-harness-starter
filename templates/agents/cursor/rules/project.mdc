@@ -1,0 +1,15 @@
+---
+description: "Project context and build commands"
+alwaysApply: true
+---
+
+# Project
+
+- Name: {{PROJECT_NAME}}
+- Stack: {{STACK}}
+
+## Build & Test
+
+- `{{BUILD_COMMAND}}` to build
+- `{{TEST_COMMAND}}` to run tests
+- `{{LINT_COMMAND}}` to lint

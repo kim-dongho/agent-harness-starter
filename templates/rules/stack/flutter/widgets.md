@@ -1,0 +1,11 @@
+# Flutter — 위젯 & UI
+- 큰 build 메서드는 private 메서드가 아닌 별도 Widget 클래스로 분리한다 — 독립 리빌드 + const 가능.
+- `TextEditingController`, `AnimationController`, `StreamSubscription`은 `dispose()`에서 반드시 해제한다.
+- 애니메이션은 `Opacity` 대신 `FadeTransition`을 사용한다 — 레이어 비용 절약.
+- 긴/무한 리스트는 `ListView.builder()`를 사용한다. `ListView()` + children 리스트 사용 금지.
+- Stateful 위젯이 리스트/조건부 트리에 있으면 `Key`를 적절히 부여하여 상태를 보존한다.
+- GoRouter로 선언적, 타입 안전한 라우팅을 구현한다.
+- 네트워크 이미지는 `cached_network_image`로 캐싱한다.
+- `BuildContext`를 비동기 콜백에서 사용하지 않는다 — `mounted` 체크 또는 콜백 전에 context 참조를 캡처한다.
+- 위젯 트리에 deep nesting(5단계+)을 만들지 않는다 — 위젯을 추출하여 분리한다.
+- `print()`로 로깅하지 않는다 — `debugPrint()` 또는 `logger` 패키지를 사용한다.

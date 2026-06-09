@@ -1,93 +1,261 @@
-# Agent Harness Starter
+# agent-harness-starter
 
+프로젝트 스캐폴딩 + AI 에이전트 하네스를 한번에 세팅하는 CLI 도구.
 
+스택 선택 → 보일러플레이트 생성 → 에이전트 룰/스킬/워크플로우 세팅 → Docker/Graphify → 의존성 설치까지 원스톱.
 
-## Getting started
+## Quick Start
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.dtechlab.com/frontend-playground/agent-harness-starter.git
-git branch -M main
-git push -uf origin main
+```bash
+npx @scope/create-ahs
+# 또는
+node dist/cli.js
 ```
 
-## Integrate with your tools
+## 지원 에이전트
 
-- [ ] [Set up project integrations](https://gitlab.dtechlab.com/frontend-playground/agent-harness-starter/-/settings/integrations)
+| 에이전트       | 룰                                | 스킬 (SKILL.md)     |
+| -------------- | --------------------------------- | ------------------- |
+| Claude Code    | `.claude/rules/`                  | `.claude/skills/`   |
+| Cursor         | `.cursor/rules/*.mdc`             | `.cursor/skills/`   |
+| Windsurf       | `.windsurf/rules/*.md`            | `.windsurf/skills/` |
+| Cline          | `.clinerules/*.md`                | `.cline/skills/`    |
+| GitHub Copilot | `.github/copilot-instructions.md` | `.github/skills/`   |
+| Aider          | `CONVENTIONS.md`                  | -                   |
+| Gemini CLI     | `GEMINI.md`                       | `.gemini/skills/`   |
 
-## Collaborate with your team
+> SKILL.md는 [Agent Skills 오픈 스탠다드](https://agentskills.io)로, Aider를 제외한 모든 에이전트가 동일한 포맷을 지원합니다.
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+## 지원 스택 (31개)
 
-## Test and Deploy
+### Frontend
 
-Use the built-in continuous integration in GitLab.
+Next.js (App/Pages) · React (Vite) · Vue (Vite) · Nuxt · SvelteKit · Angular · Astro · Remix · SolidStart · Qwik
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### Backend
 
-***
+Go (Gin/Echo/Fiber) · Java (Spring Boot) · Python (FastAPI/Django/Flask) · Node (Express/NestJS/Hono/Fastify) · Rust (Axum/Actix) · Kotlin (Ktor) · C# (.NET)
 
-# Editing this README
+### Blockchain
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+Solidity (Hardhat/Foundry) · Solana (Anchor) · Move (Sui/Aptos) · TON (Tact) · CosmWasm
 
-## Suggestions for a good README
+### Mobile
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+React Native · Flutter
 
-## Name
-Choose a self-explaining name for your project.
+## 선택 플로우
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+```
+1. 프로젝트 이름
+2. AI 에이전트 (Claude / Cursor / Windsurf / Cline / Copilot / Aider / Gemini)
+3. Graphify Knowledge Graph (Y/N)
+4. Docker (Y/N)
+5. 의존성 자동 설치 (Y/N)
+6. 이슈 트래커 (Jira / None)
+7. 레포 구조 (모노레포 Turborepo / 폴리레포)
+8. 스택 선택 (카테고리 → 스택, 모노레포면 복수 선택)
+9. 스택별 세부 옵션
+   - 언어 (TS/JS)
+   - 아키텍처 (FSD, Atomic, Clean, Layered, DDD 등)
+   - 패키지 매니저 (npm/pnpm/bun/yarn)
+   - 린트 (ESLint+Prettier / Biome)
+   - 네이밍 규칙 (kebab-case / PascalCase / camelCase)
+   - 스타일링, 상태관리, 테스트, 폼, i18n (FE)
+   - ORM, DB, API 스타일, API 문서화 (BE)
+   - 네트워크 (Blockchain)
+   - 상태관리, 네비게이션 (Mobile)
+```
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+## 생성되는 구조
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+### 폴리레포
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+```
+my-project/
+├── src/                        # 스택 보일러플레이트
+├── .claude/                    # AI 에이전트 룰 + 스킬 (Claude 선택 시)
+│   ├── CLAUDE.md
+│   ├── rules/
+│   │   ├── core/               # 공통 규칙 (thinking-model, verify, forbidden-patterns, policy-test)
+│   │   └── react/              # 스택별 규칙
+│   └── skills/
+│       ├── code-review/        # 공통 스킬
+│       ├── accessibility/      # FE 스킬
+│       ├── start/              # 워크플로우 — 작업 시작
+│       ├── done/               # 워크플로우 — 작업 완료
+│       └── review/             # 워크플로우 — 코드 리뷰
+├── Dockerfile                  # Docker 선택 시
+├── docker-compose.yml
+├── .graphifyrc                 # Graphify 선택 시
+├── .env.example                # 환경변수 템플릿 (Jira 토큰 등)
+├── README.md                   # 동적 생성
+└── vitest.config.ts            # 테스트 프레임워크 선택 시
+```
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+### 모노레포
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+```
+my-project/
+├── apps/
+│   ├── web/                    # FE 스택
+│   ├── api/                    # BE 스택
+│   └── contracts/              # 블록체인 스택
+├── packages/
+│   ├── typescript-config/      # 공유 tsconfig
+│   └── eslint-config/          # 공유 린트 (또는 biome.json)
+├── .claude/                    # AI 에이전트 룰
+├── turbo.json
+├── pnpm-workspace.yaml         # pnpm 선택 시
+└── docker-compose.yml          # Docker 선택 시
+```
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+## 워크플로우 Skills
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+프로젝트 생성 시 워크플로우 스킬이 자동으로 포함됩니다. 이슈 트래커(Jira)와 Git 플랫폼(GitLab)에 맞게 커맨드가 세팅됩니다.
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+| 스킬                | 설명                                                                           |
+| ------------------- | ------------------------------------------------------------------------------ |
+| `/start <이슈번호>` | 이슈 조회 → 상태 변경 → 브랜치 생성 → 분석 → 복잡도 판단 → 구현 계획           |
+| `/done`             | 품질 게이트 5단계 (lint → test → 정책 → 범위 → 컨벤션) → 커밋 → push → MR 생성 |
+| `/review`           | 금지 패턴 체크 → 정책 검증 → 코드 리뷰 → 심각도별 리포트                       |
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+### 품질 게이트 (/done)
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+1. **코드 품질** — lint, type-check 통과
+2. **테스트** — 관련 테스트 통과
+3. **정책 보호** — 정책 키워드 변경 시 테스트 존재 확인
+4. **범위 검증** — 의도하지 않은 파일 변경 없음
+5. **컨벤션** — 커밋 메시지, 불필요한 파일 제외
 
-## License
-For open source projects, say how it is licensed.
+## 에이전트별 동작 차이
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+### skills 지원 에이전트 (Claude, Cursor, Windsurf, Cline, Copilot, Gemini)
+
+- **rules**: 핵심 규칙만 (짧게, 항상 로드)
+- **skills**: 상세 가이드 + 워크플로우 (필요할 때만 로드, 토큰 절약)
+- 블록체인 보안 체크리스트는 체인 특화이므로 rules에 포함
+
+### Aider
+
+- **rules**: 보안 포함 전체 규칙 (`CONVENTIONS.md`에 모든 내용 포함)
+- skills 미지원이므로 rules에 전부 포함
+
+## 스킬 목록
+
+### 공통
+
+- `code-review` — 코드 리뷰 체크리스트 (보안/성능/에러/유지보수)
+- `testing` — 테스트 작성 가이드 (AAA 패턴, 커버리지)
+- `commit-convention` — Conventional Commits
+- `naming-convention` — 네이밍 컨벤션
+
+### Frontend
+
+- `accessibility` — 웹 접근성 WCAG 체크리스트
+- `performance` — Core Web Vitals 최적화
+- `seo` — SEO 체크리스트
+- `component-convention` — 컴포넌트 작성 컨벤션
+
+### Backend
+
+- `api-design` — REST API 설계 가이드
+- `error-handling` — 에러 처리 패턴
+- `db-convention` — DB 쿼리/스키마 컨벤션
+
+### Blockchain
+
+- `security-audit` — 스마트 컨트랙트 보안 감사
+
+### Workflow
+
+- `start` — 이슈 기반 작업 시작
+- `done` — 품질 게이트 + 커밋 + MR
+- `review` — 코드 리뷰 + 정책 검증
+
+## 룰 파일 출처
+
+| 스택        | 출처                                                                                                                                   |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Solidity    | [SWC Registry](https://swcregistry.io/)                                                                                                |
+| Solana      | [Sealevel Attacks](https://github.com/coral-xyz/sealevel-attacks)                                                                      |
+| Move        | [Hacken Audit Checklist](https://hacken.io/discover/move-smart-contract-audit-checklist/)                                              |
+| TON         | [CertiK Tact Security](https://www.certik.com/resources/blog/secure-smart-contract-programming-in-tact-popular-mistakes-in-the-ton)    |
+| CosmWasm    | [jcsec Security Spotlight](https://github.com/jcsec-security/cosmwasm-security-spotlight)                                              |
+| React       | [React Docs](https://react.dev/)                                                                                                       |
+| Agent Rules | [PatrickJS/awesome-cursorrules](https://github.com/PatrickJS/awesome-cursorrules), [block/ai-rules](https://github.com/block/ai-rules) |
+
+## 개발
+
+```bash
+# 의존성 설치
+npm install
+
+# 개발 모드
+npm run dev
+
+# 빌드
+npm run build
+
+# 로컬 테스트
+node dist/cli.js
+
+# Docker 테스트 (95개)
+npm run test:docker
+
+# Docker 테스트 (필터)
+npx tsx scripts/test-docker.ts monorepo
+npx tsx scripts/test-docker.ts go
+npx tsx scripts/test-docker.ts astro
+```
+
+## 프로젝트 구조
+
+```
+src/
+├── cli.ts                      # 진입점
+├── constants.ts                # 상수 + 매핑
+├── prompts/                    # 인터랙티브 프롬프트
+│   ├── common.ts               # 공통 (이름, 에이전트, 이슈 트래커, 레포)
+│   ├── frontend.ts             # FE 세부 옵션
+│   ├── backend.ts              # BE 세부 옵션
+│   ├── blockchain.ts           # 블록체인 옵션
+│   ├── mobile.ts               # 모바일 옵션
+│   └── types.ts                # 타입 정의
+├── scaffolder/                 # 스캐폴더 (순서대로)
+│   ├── index.ts                # 오케스트레이터
+│   ├── project.ts              # Step 1. 프로젝트 생성
+│   ├── agent-rules.ts          # Step 2. 에이전트 룰 + 스킬 + 워크플로우
+│   ├── graphify.ts             # Graphify 세팅
+│   └── utils.ts                # 공통 헬퍼
+├── generators/                 # 생성기
+│   ├── commands.ts             # CLI 커맨드 매핑
+│   ├── manual.ts               # 수동 생성 라우터
+│   ├── monorepo.ts             # 모노레포 공유 패키지
+│   ├── docker.ts               # Docker 생성
+│   ├── readme.ts               # README 생성
+│   ├── env.ts                  # .env.example 생성
+│   ├── post-process.ts         # 아키텍처/테스트/라이브러리 후처리
+│   └── stacks/                 # 스택별 보일러플레이트
+│       ├── node.ts
+│       ├── go.ts
+│       ├── java.ts
+│       ├── python.ts
+│       ├── rust.ts
+│       ├── kotlin.ts
+│       ├── dotnet.ts
+│       ├── angular.ts
+│       ├── frontend.ts
+│       └── blockchain.ts
+templates/
+├── agents/                     # 에이전트별 기본 템플릿 (7개)
+├── rules/
+│   ├── core/                   # 공통 룰 (5개)
+│   └── stack/                  # 스택별 룰 (19개 폴더)
+└── skills/                     # SKILL.md 오픈 스탠다드
+    ├── common/                 # 공통 스킬 (4개)
+    ├── frontend/               # FE 스킬 (4개)
+    ├── backend/                # BE 스킬 (3개)
+    ├── blockchain/             # 블록체인 스킬 (1개)
+    └── workflow/               # 워크플로우 스킬 (3개)
+```

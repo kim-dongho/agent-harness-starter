@@ -1,0 +1,10 @@
+# Angular — 컴포넌트
+- Standalone component를 기본으로 사용한다. NgModule은 레거시 통합 시에만.
+- 새 제어 흐름 문법(`@if`, `@for`, `@switch`)을 사용한다. `*ngIf`, `*ngFor` 지양.
+- `@for` 루프에 반드시 `track` 표현식을 지정한다.
+- `@defer` 블록으로 무거운 컴포넌트를 지연 로딩한다.
+- 컴포넌트는 얇게 유지한다. 비즈니스 로직은 서비스에 위임.
+- `inject()` 함수를 생성자 주입 대신 사용한다.
+- `subscribe()`를 컴포넌트에서 직접 호출하고 `unsubscribe`를 누락하지 않는다 — `async` 파이프 또는 `takeUntilDestroyed`를 사용한다.
+- `document.querySelector`로 DOM에 직접 접근하지 않는다 — `ViewChild`, `ElementRef`를 사용한다.
+- `innerHTML`에 사용자 입력을 바인딩하지 않는다 — `DomSanitizer`를 경유한다.
