@@ -1,5 +1,19 @@
 #!/usr/bin/env bash
-# harness: stop-review — build + lint + 변경분 테스트 + scope check
+# ──────────────────────────────────────────────────────────────
+# stop-review.sh — 에이전트가 응답을 끝내려 할 때 빌드/lint/범위를 최종 검사
+#
+# 실행 시점: Stop (에이전트가 응답 완료할 때마다)
+# 동작:
+#   1. TypeScript면 tsc --noEmit으로 전체 빌드 에러 체크
+#   2. linter 설정이 있으면 lint 실행 (biome/eslint)
+#   3. git diff로 변경 파일이 allowedScopes 안에 있는지 범위 체크
+#   4. 에러 있으면 .harness/errors.log에 축적 (learnings-recorder가 이어서 처리)
+#   5. 테스트는 여기서 안 돌림 (/done에서만 실행 — 매번 돌리면 너무 느림)
+#
+# 입력: 없음 (Stop hook은 stdin이 비어있음)
+# 출력: 🔧 stop-review: OK / 이슈 발견
+# exit 0: 항상 (Stop hook은 차단하지 않고 피드백만)
+# ──────────────────────────────────────────────────────────────
 set -euo pipefail
 
 CONFIG="$CLAUDE_PROJECT_DIR/harness.config.json"
@@ -10,7 +24,7 @@ fi
 CONTEXT=""
 HAS_ERRORS=false
 
-# 1. Build check (TypeScript만)
+# 1. 빌드 체크 — TypeScript일 때만 tsc --noEmit 실행 (~1초)
 LANGUAGE=$(jq -r '.project.language // "typescript"' "$CONFIG")
 if [ "$LANGUAGE" = "typescript" ]; then
   BUILD_RESULT=$(npx tsc --noEmit --pretty false 2>&1) || true
@@ -22,13 +36,14 @@ if [ "$LANGUAGE" = "typescript" ]; then
   fi
 fi
 
-# 2. Lint check (기본값 none — post-write.sh와 통일)
+# 2. Lint 체크 — harness.config.json의 linter 설정에 따라
+#    biome/eslint만 허용, 그 외 값은 무시 (command injection 방지)
 LINTER=$(jq -r '.development.linter // "none"' "$CONFIG")
 case "$LINTER" in
   biome)  LINT_RESULT=$(npx biome check src/ 2>&1) || true ;;
   eslint) LINT_RESULT=$(npx eslint src/ --no-error-on-unmatched-pattern 2>&1) || true ;;
   none)   LINT_RESULT="" ;;
-  *)      LINT_RESULT="" ;; # 알 수 없는 linter는 스킵
+  *)      LINT_RESULT="" ;;
 esac
 
 if [ -n "$LINT_RESULT" ]; then
@@ -40,36 +55,20 @@ if [ -n "$LINT_RESULT" ]; then
   fi
 fi
 
-# 3. 변경분 테스트 — runner 화이트리스트 + runner별 분기
-RUNNER=$(jq -r '.testing.runner // "vitest"' "$CONFIG")
-case "$RUNNER" in
-  vitest)
-    TEST_RESULT=$(npx vitest run --changed HEAD 2>&1) || true ;;
-  jest)
-    TEST_RESULT=$(npx jest --changedSince=HEAD 2>&1) || true ;;
-  mocha|playwright)
-    TEST_RESULT=$(npx "$RUNNER" 2>&1) || true ;;
-  *)
-    # 알 수 없는 runner는 스킵
-    TEST_RESULT="" ;;
-esac
+# 3. 테스트는 /done에서만 실행 (stop-review에서는 빌드+lint+범위만 체크)
 
-if [ -n "$TEST_RESULT" ] && echo "$TEST_RESULT" | grep -qiE "FAIL|failed|✗|×"; then
-  FAILED=$(echo "$TEST_RESULT" | grep -iE "FAIL|✗|×" | head -5)
-  CONTEXT="$CONTEXT\n❌ Tests failed:\n$FAILED"
-  HAS_ERRORS=true
-fi
-
-# 4. Scope check
+# 4. 범위 체크 — 변경 파일이 allowedScopes 안에 있는지 확인
+#    git diff --name-only HEAD로 uncommitted 변경 파일 목록을 가져옴
 CHANGED=$(git diff --name-only HEAD 2>/dev/null || true)
 if [ -n "$CHANGED" ]; then
-  set -f
+  set -f  # glob 확장 방지
   ALLOWED=$(jq -r '(.agent.allowedScopes // ["src/**/*","tests/**/*"])[]' "$CONFIG" 2>/dev/null || echo "src/**/*")
+  # 루트 설정 파일은 scope 체크에서 제외
   ALWAYS_ALLOW="harness.config.json package.json package-lock.json tsconfig.json .gitignore .env.example README.md .npmrc"
   VIOLATIONS=""
   while IFS= read -r file; do
     [ -z "$file" ] && continue
-    # 항상 허용 파일
+    # 항상 허용 목록 체크
     SKIP=false
     for allow in $ALWAYS_ALLOW; do
       if [ "$file" = "$allow" ]; then SKIP=true; break; fi
@@ -81,8 +80,10 @@ if [ -n "$CHANGED" ]; then
     for scope in $ALLOWED; do
       PREFIX="${scope%%/**/*}"
       if [ "$PREFIX" != "$scope" ]; then
+        # dir/**/* 형태 → prefix 매칭
         if [[ "$file" == "$PREFIX/"* ]]; then MATCHED=true; break; fi
       else
+        # 그 외 → bash glob 매칭
         if [[ "$file" == $scope ]]; then MATCHED=true; break; fi
       fi
     done
@@ -98,14 +99,19 @@ if [ -n "$CHANGED" ]; then
   fi
 fi
 
-# 5. 에러 있으면 errors.log에 축적
+# 5. 에러가 하나라도 있으면 .harness/errors.log에 축적
+#    learnings-recorder.sh가 이 파일을 읽어서 learnings.json에 규칙으로 변환
 if [ "$HAS_ERRORS" = true ]; then
   mkdir -p "$CLAUDE_PROJECT_DIR/.harness"
   printf -- "--- %s ---\n%b\n\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$CONTEXT" >> "$CLAUDE_PROJECT_DIR/.harness/errors.log"
 fi
 
+# 결과 출력
 if [ -n "$CONTEXT" ]; then
+  echo "🔧 stop-review: 이슈 발견"
   printf "=== Harness Review ===%b\n" "$CONTEXT"
+else
+  echo "🔧 stop-review: OK — 빌드/린트 통과"
 fi
 
 exit 0

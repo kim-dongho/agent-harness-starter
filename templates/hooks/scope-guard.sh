@@ -2,6 +2,8 @@
 # harness: scope-guard — blocks file writes outside allowed scopes
 set -euo pipefail
 
+_log() { mkdir -p "$CLAUDE_PROJECT_DIR/.harness"; printf "[%s] scope-guard: %s\n" "$(date -u +%H:%M:%S)" "$1" >> "$CLAUDE_PROJECT_DIR/.harness/harness.log"; }
+
 INPUT=$(cat)
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
 
@@ -14,26 +16,51 @@ if [ ! -f "$CONFIG" ]; then
   exit 0
 fi
 
-REL_PATH=$(realpath --relative-to="$CLAUDE_PROJECT_DIR" "$FILE_PATH" 2>/dev/null || echo "$FILE_PATH")
+# 상대 경로 변환 + .. 방어
+if [[ "$FILE_PATH" == /* ]]; then
+  REL_PATH="${FILE_PATH#${CLAUDE_PROJECT_DIR%/}/}"
+else
+  REL_PATH="$FILE_PATH"
+fi
 
-# harness.config.json에서 allowedScopes 읽기
-MATCH=$(node -e "
-const fs = require('fs');
-const {minimatch} = require('minimatch');
-const config = JSON.parse(fs.readFileSync(process.argv[1], 'utf-8'));
-const scopes = config.agent?.allowedScopes ?? ['src/**/*', 'tests/**/*'];
-const rel = process.argv[2];
-// config 파일, 루트 설정 파일은 항상 허용
-const alwaysAllow = ['harness.config.json', 'package.json', 'tsconfig.json', '.gitignore', '.env.example', 'README.md'];
-if (alwaysAllow.some(f => rel === f || rel.endsWith('/' + f))) { console.log('yes'); process.exit(0); }
-const ok = scopes.some(s => minimatch(rel, s));
-console.log(ok ? 'yes' : 'no');
-" "$CONFIG" "$REL_PATH" 2>/dev/null || echo "yes")
-
-if [ "$MATCH" = "no" ]; then
-  SCOPES=$(jq -r '.agent.allowedScopes | join(", ")' "$CONFIG" 2>/dev/null || echo "src/**/*")
-  echo "harness: '$REL_PATH' is outside allowed scopes ($SCOPES)" >&2
+if [[ "$REL_PATH" == *".."* ]]; then
+  _log "BLOCK path traversal: $REL_PATH"
+  echo "harness: path traversal detected in '$REL_PATH'" >&2
   exit 2
 fi
 
-exit 0
+# 루트 설정 파일은 항상 허용
+case "$REL_PATH" in
+  harness.config.json|package.json|package-lock.json|tsconfig.json|.gitignore|.env.example|README.md|.npmrc)
+    _log "ALLOW (config): $REL_PATH"
+    exit 0 ;;
+esac
+
+# allowedScopes 읽기 (fallback: src tests)
+set -f
+ALLOWED=$(jq -r '(.agent.allowedScopes // ["src/**/*","tests/**/*"])[]' "$CONFIG" 2>/dev/null || echo "src/**/*")
+if [ -z "$ALLOWED" ]; then
+  ALLOWED="src/**/*
+tests/**/*"
+fi
+
+for scope in $ALLOWED; do
+  PREFIX="${scope%%/**/*}"
+  if [ "$PREFIX" != "$scope" ]; then
+    if [[ "$REL_PATH" == "$PREFIX/"* ]]; then
+      _log "ALLOW (scope $scope): $REL_PATH"
+      exit 0
+    fi
+  else
+    if [[ "$REL_PATH" == $scope ]]; then
+      _log "ALLOW (scope $scope): $REL_PATH"
+      exit 0
+    fi
+  fi
+done
+set +f
+
+SCOPES=$(jq -r '(.agent.allowedScopes // ["src/**/*","tests/**/*"]) | join(", ")' "$CONFIG" 2>/dev/null || echo "src/**/*")
+_log "BLOCK (outside scope): $REL_PATH"
+echo "harness: '$REL_PATH' is outside allowed scopes ($SCOPES)" >&2
+exit 2

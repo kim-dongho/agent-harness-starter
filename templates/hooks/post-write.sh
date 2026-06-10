@@ -14,11 +14,17 @@ if [ ! -f "$CONFIG" ]; then
   exit 0
 fi
 
-REL_PATH=$(realpath --relative-to="$CLAUDE_PROJECT_DIR" "$FILE_PATH" 2>/dev/null || echo "$FILE_PATH")
+# 상대 경로 변환 + path traversal 방어
+if [[ "$FILE_PATH" == /* ]]; then
+  REL_PATH="${FILE_PATH#${CLAUDE_PROJECT_DIR%/}/}"
+else
+  REL_PATH="$FILE_PATH"
+fi
+if [[ "$REL_PATH" == *".."* ]]; then exit 0; fi
 CONTEXT=""
 
 # 1. Lint check (non-blocking — context feedback)
-LINTER=$(jq -r '.development.linter // "eslint"' "$CONFIG")
+LINTER=$(jq -r '.development.linter // "none"' "$CONFIG")
 if [ "$LINTER" = "biome" ]; then
   LINT_RESULT=$(npx biome check "$FILE_PATH" 2>&1) || true
 else

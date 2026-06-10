@@ -193,7 +193,7 @@ describe('scaffold-guard.sh', () => {
       tool_input: { file_path: 'src/components/NewComponent.tsx' },
     });
     expect(result.code).toBe(2);
-    expect(result.stderr).toContain('harness generate');
+    expect(result.stderr).toContain('/generate');
   });
 
   it('src/hooks에 새 파일 Write는 차단한다 (exit 2)', () => {
@@ -202,7 +202,7 @@ describe('scaffold-guard.sh', () => {
       tool_input: { file_path: 'src/hooks/useAuth.ts' },
     });
     expect(result.code).toBe(2);
-    expect(result.stderr).toContain('harness generate');
+    expect(result.stderr).toContain('/generate');
   });
 });
 

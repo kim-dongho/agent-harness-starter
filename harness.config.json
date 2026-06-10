@@ -1,0 +1,54 @@
+{
+  "project": {
+    "name": "agent-harness-starter",
+    "framework": "unknown",
+    "packageManager": "npm",
+    "language": "typescript"
+  },
+  "architecture": {
+    "style": "modular",
+    "enforceIndexGen": false,
+    "forbiddenImports": {}
+  },
+  "development": {
+    "linter": "none",
+    "formatter": "none",
+    "styling": ""
+  },
+  "testing": {
+    "runner": "vitest",
+    "minCoverage": {
+      "statements": 80,
+      "branches": 75,
+      "functions": 80,
+      "lines": 80
+    },
+    "requireTestFileWithImplementation": false
+  },
+  "agent": {
+    "persona": "senior-developer",
+    "allowedScopes": [
+      "src/**/*",
+      "tests/**/*",
+      "templates/**/*",
+      "scripts/**/*",
+      ".claude/**/*"
+    ],
+    "adapters": ["claude"]
+  },
+  "rules": {
+    "fileNaming": {
+      "components": "PascalCase",
+      "hooks": "camelCase",
+      "utils": "camelCase",
+      "services": "camelCase",
+      "models": "camelCase",
+      "testSuffix": ".test"
+    },
+    "codingStandards": [
+      { "id": "no-hardcoded-secrets", "description": "시크릿/크리덴셜을 코드에 하드코딩하지 않는다", "severity": "error" },
+      { "id": "no-console-log", "description": "console.log를 디버깅 용도로 남기지 않는다", "severity": "error" },
+      { "id": "no-commented-code", "description": "주석 처리된 코드 블록을 커밋하지 않는다", "severity": "error" }
+    ]
+  }
+}
