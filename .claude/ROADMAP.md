@@ -80,10 +80,10 @@
 - [x] Spec + 테스트 + 코드 변경 3개 신호 동시 비교 — 의도 이탈 감지
 - [x] Intent Drift 알림 — 구현이 스펙에서 벗어나면 자동 경고
 
-### 3-4. Computational Sensors
-- [ ] `dependency-cruiser` — 아키텍처 위반 자동 감지
-- [ ] Coupling 메트릭 추출
-- [ ] Mutation Testing (Stryker) — 테스트 품질 검증
+### 3-4. Computational Sensors ✅
+- [x] `dependency-cruiser` — 아키텍처 위반 자동 감지 (설정 파일 + devDependency + post-write hook 연동)
+- [x] Coupling 메트릭 추출 (dependency-cruiser에 포함)
+- [x] Mutation Testing (Stryker) — 설정 파일 + devDependency 자동 생성 (JS/TS 스택)
 
 ### 3-5. Progressive Context Loading
 - [ ] 단계별 필요한 규칙만 로드 (토큰 60-95% 절약)

@@ -40,7 +40,15 @@ if [ "$LANGUAGE" = "typescript" ]; then
 fi
 
 # 3. Import violation check (non-blocking — context feedback)
-VIOLATIONS=$(node -e "
+# dependency-cruiser가 있으면 정적 분석, 없으면 간이 검사
+if [ -f "$CLAUDE_PROJECT_DIR/.dependency-cruiser.cjs" ] && command -v npx &>/dev/null; then
+  DEP_RESULT=$(npx depcruise --config "$CLAUDE_PROJECT_DIR/.dependency-cruiser.cjs" "$FILE_PATH" 2>&1) || true
+  if echo "$DEP_RESULT" | grep -q "error"; then
+    DEP_ERRORS=$(echo "$DEP_RESULT" | grep "error" | head -3)
+    CONTEXT="$CONTEXT\n⚠️ Architecture violation in $REL_PATH:\n$DEP_ERRORS"
+  fi
+else
+  VIOLATIONS=$(node -e "
 const fs = require('fs');
 const path = require('path');
 const config = JSON.parse(fs.readFileSync(process.argv[1], 'utf-8'));
@@ -60,8 +68,9 @@ try {
 } catch {}
 " "$CONFIG" "$REL_PATH" "$CLAUDE_PROJECT_DIR" 2>/dev/null || true)
 
-if [ -n "$VIOLATIONS" ]; then
-  CONTEXT="$CONTEXT\n⚠️ Import violation in $REL_PATH: $VIOLATIONS"
+  if [ -n "$VIOLATIONS" ]; then
+    CONTEXT="$CONTEXT\n⚠️ Import violation in $REL_PATH: $VIOLATIONS"
+  fi
 fi
 
 if [ -n "$CONTEXT" ]; then

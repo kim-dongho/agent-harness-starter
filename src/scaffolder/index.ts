@@ -23,6 +23,7 @@ import { generateEnvExample } from '../generators/env.js';
 import { setupGraphify } from './graphify.js';
 import { generateHarnessConfig } from '../generators/harness-config.js';
 import { setupHarnessHooks } from '../generators/harness-hooks.js';
+import { setupSensors } from '../generators/sensors.js';
 import type { UserChoices } from '../prompts/types.js';
 
 /**
@@ -77,6 +78,10 @@ export async function scaffold(choices: UserChoices, opts?: { silent?: boolean }
   spinner.stop(`에이전트 룰 세팅 완료 — ${ruleCount}개 룰 + ${hookCount}개 hooks`);
   steps.push(`${pc.green('✓')} 에이전트 룰 (${choices.agent}) — ${ruleCount}개 파일`);
   if (hookCount > 0) steps.push(`${pc.green('✓')} Harness hooks — scope-guard, scaffold-guard, post-write, session-init`);
+
+  // Step 2.5. Computational Sensors
+  const sensorCount = await setupSensors(projectDir, choices);
+  if (sensorCount > 0) steps.push(`${pc.green('✓')} Sensors — dependency-cruiser${sensorCount > 1 ? ' + Stryker' : ''}`);
 
   // Step 3. README + .env.example
   spinner.start('README + .env.example 생성 중...');
