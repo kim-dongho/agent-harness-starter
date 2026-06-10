@@ -76,9 +76,9 @@
 - [x] **고도화: filesystem-as-message-bus** — feedback.md 기반 리뷰 결과 기록 + 이전 피드백 반영 확인
 - [x] **고도화: Plan Review** — /plan skill에 리뷰 단계 추가 + 5개 에이전트에 plan-reviewer 서브에이전트 생성
 
-### 3-3. Intent Verification
-- [ ] Spec + 테스트 + 코드 변경 3개 신호 동시 비교 — 의도 이탈 감지
-- [ ] Intent Drift 알림 — 구현이 스펙에서 벗어나면 자동 경고
+### 3-3. Intent Verification ✅
+- [x] Spec + 테스트 + 코드 변경 3개 신호 동시 비교 — 의도 이탈 감지
+- [x] Intent Drift 알림 — 구현이 스펙에서 벗어나면 자동 경고
 
 ### 3-4. Computational Sensors
 - [ ] `dependency-cruiser` — 아키텍처 위반 자동 감지
