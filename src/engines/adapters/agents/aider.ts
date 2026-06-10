@@ -5,8 +5,8 @@
  * hooks 미지원 — auto-lint/auto-test 내장 기능 활용
  * .aider.conf.yml의 read 옵션으로 스택별 파일 분리 가능
  */
-import type { AgentAdapter, HarnessConfig, AdapterOutput } from './types.js';
-import { buildProjectContext, buildCodingPrinciples, buildConventionRules, buildCodingStandards, buildWorkflowRules } from './shared.js';
+import type { AgentAdapter, HarnessConfig, AdapterOutput } from '../types.js';
+import { buildProjectContext, buildCodingPrinciples, buildConventionRules, buildCodingStandards, buildWorkflowRules } from '../builders.js';
 
 export const aiderAdapter: AgentAdapter = {
   name: 'Aider',

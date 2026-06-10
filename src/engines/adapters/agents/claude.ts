@@ -3,8 +3,8 @@
  *
  * CLAUDE.md + .claude/rules/*.md + .claude/hooks/ + .claude/settings.json
  */
-import type { AgentAdapter, HarnessConfig, AdapterOutput } from './types.js';
-import { buildFullContent, buildProjectContext, buildConventionRules, buildCodingPrinciples, buildCodingStandards, buildWorkflowRules } from './shared.js';
+import type { AgentAdapter, HarnessConfig, AdapterOutput } from '../types.js';
+import { buildFullContent, buildProjectContext, buildConventionRules, buildCodingPrinciples, buildCodingStandards, buildWorkflowRules } from '../builders.js';
 
 export const claudeAdapter: AgentAdapter = {
   name: 'Claude Code',

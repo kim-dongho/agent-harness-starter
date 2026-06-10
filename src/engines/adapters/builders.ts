@@ -1,26 +1,42 @@
 /**
- * 공통 빌더
+ * @fileoverview 공통 빌더 함수
  *
- * harness.config.json → 에이전트 규칙 콘텐츠로 변환하는 공유 함수들.
- * 각 어댑터가 이 함수들의 결과를 에이전트별 포맷으로 래핑한다.
+ * harness.config.json의 값을 읽어 에이전트 규칙 마크다운 콘텐츠를 생성한다.
+ * 각 어댑터가 이 함수들의 결과를 에이전트별 포맷(mdc, yaml frontmatter 등)으로 래핑한다.
+ *
+ * @example
+ * ```ts
+ * const content = buildProjectContext(config) + buildCodingPrinciples() + buildConventionRules(config);
+ * ```
  */
-import path from 'node:path';
-import fs from 'fs-extra';
 import type { HarnessConfig } from './types.js';
 
-/** 프로젝트 컨텍스트 섹션 */
+/**
+ * 프로젝트 컨텍스트 섹션을 생성한다.
+ *
+ * 프로젝트 이름, 프레임워크, 언어, 패키지 매니저, 아키텍처, 테스트 러너를 포함한다.
+ *
+ * @param config - harness.config.json 파싱 결과
+ * @returns 프로젝트 컨텍스트 마크다운 문자열
+ */
 export function buildProjectContext(config: HarnessConfig): string {
-  const lines = [
+  return [
     `# ${config.project.name}`,
     '',
     `Framework: ${config.project.framework} | Language: ${config.project.language} | PM: ${config.project.packageManager}`,
     `Architecture: ${config.architecture.style} | Test: ${config.testing.runner}`,
     '',
-  ];
-  return lines.join('\n');
+  ].join('\n');
 }
 
-/** 컨벤션 규칙 섹션 */
+/**
+ * 컨벤션 규칙 섹션을 생성한다.
+ *
+ * 아키텍처 스타일, barrel export 강제, import 제한, 파일 네이밍 규칙을 포함한다.
+ *
+ * @param config - harness.config.json 파싱 결과
+ * @returns 컨벤션 규칙 마크다운 문자열
+ */
 export function buildConventionRules(config: HarnessConfig): string {
   const lines: string[] = [];
 
@@ -31,7 +47,6 @@ export function buildConventionRules(config: HarnessConfig): string {
   }
   lines.push('');
 
-  // Import restrictions
   const forbidden = config.architecture.forbiddenImports;
   if (Object.keys(forbidden).length > 0) {
     lines.push('## Import Restrictions');
@@ -41,7 +56,6 @@ export function buildConventionRules(config: HarnessConfig): string {
     lines.push('');
   }
 
-  // File naming
   const fn = config.rules?.fileNaming;
   lines.push('## File Naming');
   lines.push(`- Components: ${fn?.components ?? 'PascalCase'}`);
@@ -54,7 +68,13 @@ export function buildConventionRules(config: HarnessConfig): string {
   return lines.join('\n');
 }
 
-/** 코딩 원칙 섹션 */
+/**
+ * 코딩 원칙 섹션을 생성한다.
+ *
+ * Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution 4가지 원칙.
+ *
+ * @returns 코딩 원칙 마크다운 문자열 (config 불필요 — 고정 내용)
+ */
 export function buildCodingPrinciples(): string {
   return [
     '## Coding Principles',
@@ -67,7 +87,15 @@ export function buildCodingPrinciples(): string {
   ].join('\n');
 }
 
-/** 코딩 표준 섹션 (harness.config.json의 codingStandards) */
+/**
+ * 코딩 표준 섹션을 생성한다.
+ *
+ * harness.config.json의 `rules.codingStandards` 배열을 severity 아이콘과 함께 렌더링한다.
+ * 비어있으면 빈 문자열을 반환한다.
+ *
+ * @param config - harness.config.json 파싱 결과
+ * @returns 코딩 표준 마크다운 문자열 또는 빈 문자열
+ */
 export function buildCodingStandards(config: HarnessConfig): string {
   const standards = config.rules?.codingStandards;
   if (!standards || standards.length === 0) return '';
@@ -81,7 +109,14 @@ export function buildCodingStandards(config: HarnessConfig): string {
   return lines.join('\n');
 }
 
-/** 워크플로우 / SDLC 파이프라인 섹션 */
+/**
+ * 워크플로우 / SDLC 파이프라인 섹션을 생성한다.
+ *
+ * SDLC 파이프라인, 테스트 설정, 정책 테스트 가이드, 에이전트 스코프, 개발 도구 정보를 포함한다.
+ *
+ * @param config - harness.config.json 파싱 결과
+ * @returns 워크플로우 마크다운 문자열
+ */
 export function buildWorkflowRules(config: HarnessConfig): string {
   const lines: string[] = [];
 
@@ -97,7 +132,6 @@ export function buildWorkflowRules(config: HarnessConfig): string {
   lines.push('**MANDATORY:** 새 파일은 `/generate`로만 생성한다. 직접 Write 금지.');
   lines.push('');
 
-  // Testing
   lines.push('## Testing');
   lines.push(`- Runner: ${config.testing.runner}`);
   lines.push(`- Min coverage: statements=${config.testing.minCoverage.statements}%, branches=${config.testing.minCoverage.branches}%`);
@@ -106,7 +140,6 @@ export function buildWorkflowRules(config: HarnessConfig): string {
   }
   lines.push('');
 
-  // Policy test
   lines.push('## Policy Test');
   lines.push('');
   lines.push('비즈니스 정책(날짜 계산, 금액, 상태 전이, 필터 조건, 외부 연동 규격)이 포함된 코드를 수정할 때:');
@@ -115,14 +148,12 @@ export function buildWorkflowRules(config: HarnessConfig): string {
   lines.push('3. 정책 수정 후 기존 + 신규 테스트가 모두 통과하는지 확인한다');
   lines.push('');
 
-  // Agent scope
   lines.push('## Agent Scope');
   lines.push(`- Persona: ${config.agent.persona}`);
   lines.push(`- Allowed scopes: ${config.agent.allowedScopes.join(', ')}`);
   lines.push('- Do NOT modify files outside allowed scopes');
   lines.push('');
 
-  // Tools
   lines.push('## Tools');
   lines.push(`- Linter: ${config.development.linter}`);
   lines.push(`- Formatter: ${config.development.formatter}`);
@@ -134,7 +165,15 @@ export function buildWorkflowRules(config: HarnessConfig): string {
   return lines.join('\n');
 }
 
-/** 전체 규칙 콘텐츠를 하나로 합침 */
+/**
+ * 전체 규칙 콘텐츠를 하나로 합친다.
+ *
+ * 파일 분리가 불가능한 에이전트(Aider, Gemini)에서 단일 파일에 모든 규칙을 넣을 때 사용한다.
+ *
+ * @param config - harness.config.json 파싱 결과
+ * @param stackRules - 스택별 규칙을 하나로 합친 문자열
+ * @returns 전체 규칙 마크다운 문자열
+ */
 export function buildFullContent(config: HarnessConfig, stackRules: string): string {
   return [
     buildProjectContext(config),
@@ -144,46 +183,4 @@ export function buildFullContent(config: HarnessConfig, stackRules: string): str
     buildWorkflowRules(config),
     stackRules ? `## Stack Rules\n\n${stackRules}` : '',
   ].filter(Boolean).join('\n');
-}
-
-/** templates/rules/stack/ 에서 스택별 규칙 파일을 읽어서 합친다 */
-export async function loadStackRules(templatesDir: string, stackDirs: string[]): Promise<string> {
-  const parts: string[] = [];
-
-  for (const dir of stackDirs) {
-    const dirPath = path.join(templatesDir, 'rules', 'stack', dir);
-    if (!(await fs.pathExists(dirPath))) continue;
-
-    const files = await fs.readdir(dirPath);
-    for (const file of files.sort()) {
-      if (!file.endsWith('.md')) continue;
-      const content = await fs.readFile(path.join(dirPath, file), 'utf-8');
-      parts.push(content.trim());
-    }
-  }
-
-  return parts.join('\n\n');
-}
-
-/** templates/rules/stack/ 에서 스택별로 분리하여 반환한다 */
-export async function loadStackRulesByDir(templatesDir: string, stackDirs: string[]): Promise<Record<string, string>> {
-  const result: Record<string, string> = {};
-
-  for (const dir of stackDirs) {
-    const dirPath = path.join(templatesDir, 'rules', 'stack', dir);
-    if (!(await fs.pathExists(dirPath))) continue;
-
-    const parts: string[] = [];
-    const files = await fs.readdir(dirPath);
-    for (const file of files.sort()) {
-      if (!file.endsWith('.md')) continue;
-      const content = await fs.readFile(path.join(dirPath, file), 'utf-8');
-      parts.push(content.trim());
-    }
-    if (parts.length > 0) {
-      result[dir] = parts.join('\n\n');
-    }
-  }
-
-  return result;
 }

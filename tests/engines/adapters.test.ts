@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getAdapter, getAllAdapterTypes } from '../../src/engines/adapters/index.js';
-import { buildFullContent, buildProjectContext, buildConventionRules, buildCodingPrinciples, buildCodingStandards, buildWorkflowRules } from '../../src/engines/adapters/shared.js';
+import { buildFullContent, buildProjectContext, buildConventionRules, buildCodingPrinciples, buildCodingStandards, buildWorkflowRules } from '../../src/engines/adapters/builders.js';
 import type { HarnessConfig } from '../../src/engines/adapters/types.js';
 
 const mockConfig: HarnessConfig = {

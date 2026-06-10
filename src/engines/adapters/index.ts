@@ -4,14 +4,14 @@
  * getAdapter(type)로 에이전트별 어댑터를 가져온다.
  */
 import type { AgentType, AgentAdapter } from './types.js';
-import { claudeAdapter } from './claude.js';
-import { cursorAdapter } from './cursor.js';
-import { windsurfAdapter } from './windsurf.js';
-import { clineAdapter } from './cline.js';
-import { copilotAdapter } from './copilot.js';
-import { aiderAdapter } from './aider.js';
-import { geminiAdapter } from './gemini.js';
-import { codexAdapter } from './codex.js';
+import { claudeAdapter } from './agents/claude.js';
+import { cursorAdapter } from './agents/cursor.js';
+import { windsurfAdapter } from './agents/windsurf.js';
+import { clineAdapter } from './agents/cline.js';
+import { copilotAdapter } from './agents/copilot.js';
+import { aiderAdapter } from './agents/aider.js';
+import { geminiAdapter } from './agents/gemini.js';
+import { codexAdapter } from './agents/codex.js';
 
 const registry: Record<AgentType, AgentAdapter> = {
   claude: claudeAdapter,

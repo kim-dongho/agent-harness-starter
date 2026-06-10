@@ -4,8 +4,8 @@
  * .windsurf/rules/*.md (trigger frontmatter)
  * Devin Local에서 서브에이전트 지원
  */
-import type { AgentAdapter, HarnessConfig, AdapterOutput } from './types.js';
-import { buildProjectContext, buildCodingPrinciples, buildConventionRules, buildCodingStandards, buildWorkflowRules } from './shared.js';
+import type { AgentAdapter, HarnessConfig, AdapterOutput } from '../types.js';
+import { buildProjectContext, buildCodingPrinciples, buildConventionRules, buildCodingStandards, buildWorkflowRules } from '../builders.js';
 
 function wrapWindsurf(content: string): string {
   return `---

@@ -9,7 +9,7 @@ import fs from 'fs-extra';
 import { getStackRuleDirs, getStackCategory, type AgentValue } from '../constants.js';
 import { TEMPLATES_DIR } from './utils.js';
 import { getAdapter, type AgentType } from '../engines/adapters/index.js';
-import { loadStackRules, loadStackRulesByDir } from '../engines/adapters/shared.js';
+import { loadStackRules, loadStackRulesByDir } from '../engines/adapters/loaders.js';
 import type { HarnessConfig } from '../engines/adapters/types.js';
 import type { UserChoices } from '../prompts/types.js';
 

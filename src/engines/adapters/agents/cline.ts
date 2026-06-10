@@ -4,8 +4,8 @@
  * .clinerules/*.md (YAML frontmatter)
  * hooks 미지원 — rules로 가이드만 제공
  */
-import type { AgentAdapter, HarnessConfig, AdapterOutput } from './types.js';
-import { buildProjectContext, buildCodingPrinciples, buildConventionRules, buildCodingStandards, buildWorkflowRules } from './shared.js';
+import type { AgentAdapter, HarnessConfig, AdapterOutput } from '../types.js';
+import { buildProjectContext, buildCodingPrinciples, buildConventionRules, buildCodingStandards, buildWorkflowRules } from '../builders.js';
 
 function wrapCline(title: string, content: string): string {
   return `---
