@@ -147,16 +147,22 @@ describe('adapter registry', () => {
 
 // ─── 에이전트별 어댑터 테스트 ───
 
+const mockStackRulesByDir: Record<string, string> = {
+  react: '# React Rules\n- hooks는 최상위에서만',
+  'general-ts': '# TypeScript Rules\n- any 사용 금지',
+};
+
 describe('Claude adapter', () => {
   it('CLAUDE.md와 rules 파일을 생성한다', async () => {
     const adapter = getAdapter('claude');
-    const output = await adapter.generate('/tmp', mockConfig, '# Stack Rules');
+    const output = await adapter.generate('/tmp', mockConfig, '', mockStackRulesByDir);
 
     const paths = output.files.map(f => f.path);
     expect(paths).toContain('.claude/CLAUDE.md');
     expect(paths).toContain('.claude/rules/conventions.md');
     expect(paths).toContain('.claude/rules/workflow.md');
-    expect(paths).toContain('.claude/rules/stack.md');
+    expect(paths).toContain('.claude/rules/stack/react.md');
+    expect(paths).toContain('.claude/rules/stack/general-ts.md');
   });
 
   it('hooks와 skills를 지원한다', () => {
@@ -178,12 +184,14 @@ describe('Claude adapter', () => {
 });
 
 describe('Cursor adapter', () => {
-  it('.cursor/rules/harness.mdc를 생성한다', async () => {
+  it('.cursor/rules/harness.mdc + 스택별 분리 파일을 생성한다', async () => {
     const adapter = getAdapter('cursor');
-    const output = await adapter.generate('/tmp', mockConfig, '');
+    const output = await adapter.generate('/tmp', mockConfig, '', mockStackRulesByDir);
 
     const paths = output.files.map(f => f.path);
     expect(paths).toContain('.cursor/rules/harness.mdc');
+    expect(paths).toContain('.cursor/rules/stack-react.mdc');
+    expect(paths).toContain('.cursor/rules/stack-general-ts.mdc');
   });
 
   it('mdc frontmatter(alwaysApply)가 포함된다', async () => {
@@ -196,21 +204,25 @@ describe('Cursor adapter', () => {
 });
 
 describe('Windsurf adapter', () => {
-  it('.windsurf/rules/harness.md를 생성한다', async () => {
+  it('.windsurf/rules/harness.md + 스택별 분리 파일을 생성한다', async () => {
     const adapter = getAdapter('windsurf');
-    const output = await adapter.generate('/tmp', mockConfig, '');
+    const output = await adapter.generate('/tmp', mockConfig, '', mockStackRulesByDir);
 
-    expect(output.files[0].path).toBe('.windsurf/rules/harness.md');
+    const paths = output.files.map(f => f.path);
+    expect(paths).toContain('.windsurf/rules/harness.md');
+    expect(paths).toContain('.windsurf/rules/stack/react.md');
     expect(output.files[0].content).toContain('trigger: always');
   });
 });
 
 describe('Cline adapter', () => {
-  it('.clinerules/harness.md를 생성한다', async () => {
+  it('.clinerules/harness.md + 스택별 분리 파일을 생성한다', async () => {
     const adapter = getAdapter('cline');
-    const output = await adapter.generate('/tmp', mockConfig, '');
+    const output = await adapter.generate('/tmp', mockConfig, '', mockStackRulesByDir);
 
-    expect(output.files[0].path).toBe('.clinerules/harness.md');
+    const paths = output.files.map(f => f.path);
+    expect(paths).toContain('.clinerules/harness.md');
+    expect(paths).toContain('.clinerules/stack-react.md');
     expect(output.files[0].content).toContain('globs:');
   });
 
@@ -225,33 +237,39 @@ describe('Cline adapter', () => {
 });
 
 describe('Copilot adapter', () => {
-  it('.github/copilot-instructions.md를 생성한다', async () => {
+  it('.github/copilot-instructions.md + 스택별 분리 파일을 생성한다', async () => {
     const adapter = getAdapter('copilot');
-    const output = await adapter.generate('/tmp', mockConfig, '');
+    const output = await adapter.generate('/tmp', mockConfig, '', mockStackRulesByDir);
 
-    expect(output.files[0].path).toBe('.github/copilot-instructions.md');
+    const paths = output.files.map(f => f.path);
+    expect(paths).toContain('.github/copilot-instructions.md');
+    expect(paths).toContain('.github/instructions/stack-react.md');
   });
 });
 
 describe('Aider adapter', () => {
-  it('CONVENTIONS.md와 .aider.conf.yml을 생성한다', async () => {
+  it('CONVENTIONS.md + 스택별 분리 + .aider.conf.yml을 생성한다', async () => {
     const adapter = getAdapter('aider');
-    const output = await adapter.generate('/tmp', mockConfig, '');
+    const output = await adapter.generate('/tmp', mockConfig, '', mockStackRulesByDir);
 
     const paths = output.files.map(f => f.path);
     expect(paths).toContain('CONVENTIONS.md');
+    expect(paths).toContain('rules/react.md');
+    expect(paths).toContain('rules/general-ts.md');
     expect(paths).toContain('.aider.conf.yml');
   });
 
-  it('auto-lint와 auto-test가 활성화된다', async () => {
+  it('.aider.conf.yml의 read에 스택 파일이 포함된다', async () => {
     const adapter = getAdapter('aider');
-    const output = await adapter.generate('/tmp', mockConfig, '');
+    const output = await adapter.generate('/tmp', mockConfig, '', mockStackRulesByDir);
     const conf = output.files.find(f => f.path === '.aider.conf.yml');
 
     expect(conf!.content).toContain('auto-lint: true');
     expect(conf!.content).toContain('auto-test: true');
     expect(conf!.content).toContain('biome');
     expect(conf!.content).toContain('vitest');
+    expect(conf!.content).toContain('rules/react.md');
+    expect(conf!.content).toContain('rules/general-ts.md');
   });
 
   it('skills 미지원이다', () => {
@@ -262,12 +280,24 @@ describe('Aider adapter', () => {
 });
 
 describe('Gemini adapter', () => {
-  it('GEMINI.md를 생성한다', async () => {
+  it('GEMINI.md + 스택별 분리 파일을 생성한다', async () => {
     const adapter = getAdapter('gemini');
-    const output = await adapter.generate('/tmp', mockConfig, '');
+    const output = await adapter.generate('/tmp', mockConfig, '', mockStackRulesByDir);
 
-    expect(output.files[0].path).toBe('GEMINI.md');
-    expect(output.files[0].content).toContain('test-project');
+    const paths = output.files.map(f => f.path);
+    expect(paths).toContain('GEMINI.md');
+    expect(paths).toContain('.gemini/rules/react.md');
+    expect(paths).toContain('.gemini/rules/general-ts.md');
+  });
+
+  it('GEMINI.md에 @import로 스택 파일을 참조한다', async () => {
+    const adapter = getAdapter('gemini');
+    const output = await adapter.generate('/tmp', mockConfig, '', mockStackRulesByDir);
+    const geminiMd = output.files.find(f => f.path === 'GEMINI.md');
+
+    expect(geminiMd!.content).toContain('test-project');
+    expect(geminiMd!.content).toContain('@./.gemini/rules/react.md');
+    expect(geminiMd!.content).toContain('@./.gemini/rules/general-ts.md');
   });
 });
 

@@ -1,11 +1,10 @@
 /**
  * GitHub Copilot 어댑터
  *
- * .github/copilot-instructions.md
- * .github/hooks/ (preToolUse — fail-closed)
+ * .github/copilot-instructions.md + .github/instructions/stack-*.md
  */
 import type { AgentAdapter, HarnessConfig, AdapterOutput } from './types.js';
-import { buildFullContent } from './shared.js';
+import { buildProjectContext, buildCodingPrinciples, buildConventionRules, buildCodingStandards, buildWorkflowRules } from './shared.js';
 
 export const copilotAdapter: AgentAdapter = {
   name: 'GitHub Copilot',
@@ -13,14 +12,28 @@ export const copilotAdapter: AgentAdapter = {
   supportsHooks: true,
   supportsSkills: true,
 
-  async generate(_root, config, stackRules) {
+  async generate(_root, config, stackRules, stackRulesByDir) {
     const files = [];
-    const content = buildFullContent(config, stackRules);
 
     files.push({
       path: '.github/copilot-instructions.md',
-      content,
+      content: [
+        buildProjectContext(config),
+        buildCodingPrinciples(),
+        buildConventionRules(config),
+        buildCodingStandards(config),
+        buildWorkflowRules(config),
+      ].join('\n'),
     });
+
+    if (stackRulesByDir && Object.keys(stackRulesByDir).length > 0) {
+      for (const [dir, content] of Object.entries(stackRulesByDir)) {
+        files.push({
+          path: `.github/instructions/stack-${dir}.md`,
+          content,
+        });
+      }
+    }
 
     return { files, skipped: [] };
   },

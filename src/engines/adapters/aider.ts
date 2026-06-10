@@ -1,11 +1,12 @@
 /**
  * Aider 어댑터
  *
- * CONVENTIONS.md + .aider.conf.yml
+ * CONVENTIONS.md + rules/{stack}.md + .aider.conf.yml
  * hooks 미지원 — auto-lint/auto-test 내장 기능 활용
+ * .aider.conf.yml의 read 옵션으로 스택별 파일 분리 가능
  */
 import type { AgentAdapter, HarnessConfig, AdapterOutput } from './types.js';
-import { buildFullContent } from './shared.js';
+import { buildProjectContext, buildCodingPrinciples, buildConventionRules, buildCodingStandards, buildWorkflowRules } from './shared.js';
 
 export const aiderAdapter: AgentAdapter = {
   name: 'Aider',
@@ -13,17 +14,35 @@ export const aiderAdapter: AgentAdapter = {
   supportsHooks: false,
   supportsSkills: false,
 
-  async generate(_root, config, stackRules) {
+  async generate(_root, config, stackRules, stackRulesByDir) {
     const files = [];
-    const content = buildFullContent(config, stackRules);
+    const readFiles: string[] = ['CONVENTIONS.md'];
 
-    // CONVENTIONS.md — 전체 규칙 (skills 미지원이라 여기에 전부 포함)
+    // CONVENTIONS.md — 프로젝트 규칙 (스택 제외)
     files.push({
       path: 'CONVENTIONS.md',
-      content,
+      content: [
+        buildProjectContext(config),
+        buildCodingPrinciples(),
+        buildConventionRules(config),
+        buildCodingStandards(config),
+        buildWorkflowRules(config),
+      ].join('\n'),
     });
 
-    // .aider.conf.yml — auto-lint/auto-test 활성화
+    // rules/{name}.md — 스택별 분리
+    if (stackRulesByDir && Object.keys(stackRulesByDir).length > 0) {
+      for (const [dir, content] of Object.entries(stackRulesByDir)) {
+        const filePath = `rules/${dir}.md`;
+        files.push({ path: filePath, content });
+        readFiles.push(filePath);
+      }
+    } else if (stackRules) {
+      files.push({ path: 'rules/stack.md', content: stackRules });
+      readFiles.push('rules/stack.md');
+    }
+
+    // .aider.conf.yml — auto-lint/auto-test + read 목록
     const lintCmd = config.development.linter === 'biome'
       ? 'npx biome check --write'
       : 'npx eslint --fix';
@@ -36,6 +55,8 @@ export const aiderAdapter: AgentAdapter = {
         'auto-test: true',
         `lint-cmd: "${lintCmd}"`,
         `test-cmd: "npx ${config.testing.runner} run"`,
+        'read:',
+        ...readFiles.map(f => `  - ${f}`),
         '',
       ].join('\n'),
     });
