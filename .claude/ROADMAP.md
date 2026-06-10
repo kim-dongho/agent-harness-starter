@@ -42,17 +42,19 @@
 
 ### 2-4. Agent Adapter ✅
 - [x] `harness.config.json` → 에이전트별 설정 동적 생성
-- [x] 7개 어댑터: Claude, Cursor, Windsurf, Cline, Copilot, Aider, Gemini
+- [x] 8개 어댑터: Claude, Cursor, Windsurf, Cline, Copilot, Aider, Gemini, **Codex CLI**
 - [x] 하나의 config로 모든 에이전트 규칙 통일 (single source of truth)
-- [x] Hooks 지원: Claude, Cursor, Windsurf, Copilot, Gemini (5개)
-- [x] Hooks 미지원: Aider (auto-lint/test 내장), Cline (수동 승인)
+- [x] 스택별 rules 파일 분리 (stack.md → stack/{name}.md)
+- [x] Aider: `.aider.conf.yml` read 옵션으로 스택별 파일 분리
+- [x] Gemini: `@import` 문법으로 스택별 파일 모듈화
+- [x] 5개 에이전트에 리뷰 서브에이전트 자동 생성 (Claude, Codex, Gemini, Cursor, Copilot)
 - [x] 기존 에이전트 템플릿 제거 → adapter 동적 생성으로 전환
 
 ### 2-5. 템플릿 최적화 ✅
 - [x] core rules 5개 → adapter로 이관 (중복 제거)
 - [x] stack rules 최적화 — 1줄 파일 병합, References URL 제거
-- [x] `general-ts/forbidden-patterns.md` 중복 삭제
-- [x] vitest 단위 테스트 26개 (어댑터 검증)
+- [x] skills 21개 → 10개 정리 (중복/stack rules 이관)
+- [x] vitest 단위 테스트 29개 (어댑터 + 서브에이전트 검증)
 
 ---
 
@@ -66,11 +68,12 @@
 - [x] 에러 없으면 토큰 0 (조건부 실행)
 
 ### 3-2. Adversarial Multi-Agent ✅ (기본) / ⬜ (고도화)
-- [x] Stop hook agent가 변경 코드 자동 리뷰 (git diff 기반)
+- [x] Stop hook agent가 변경 코드 자동 리뷰 (git diff 기반) — Claude
+- [x] 리뷰 서브에이전트 자동 생성 — Codex(.toml), Gemini/Cursor/Copilot(.md)
 - [x] 문제 발견 시 ok: false → 원래 에이전트가 수정
+- [x] 무한 루프 방지 — review-count 3회 초과 시 스킵
 - [x] learnings loop과 하나의 agent hook에 통합 (토큰 절약)
 - [ ] **고도화: filesystem-as-message-bus** — feedback.md + git commits로 완전 격리된 리뷰
-- [ ] **고도화: 최대 3회 반복** — Reviewer NO-GO 시 Implementer 수정 → 재리뷰 루프
 - [ ] **고도화: Plan Review** — Planner → Plan Reviewer 격리 리뷰 (구현 전 계획 검증)
 
 ### 3-3. Intent Verification
