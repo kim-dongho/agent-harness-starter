@@ -60,6 +60,18 @@ PLAN="no"; GLOSSARY_EXISTS="no"; DESIGN="no"
 [ -f "$CLAUDE_PROJECT_DIR/domain-glossary.json" ] && GLOSSARY_EXISTS="yes"
 [ -d "$CLAUDE_PROJECT_DIR/docs/designs" ] && [ "$(ls -A "$CLAUDE_PROJECT_DIR/docs/designs" 2>/dev/null)" ] && DESIGN="yes"
 
+# Learnings
+LEARNINGS="$CLAUDE_PROJECT_DIR/.harness/learnings.json"
+if [ -f "$LEARNINGS" ]; then
+  LEARN_COUNT=$(jq '.learnings | length' "$LEARNINGS" 2>/dev/null || echo 0)
+  if [ "$LEARN_COUNT" -gt 0 ]; then
+    echo ""
+    echo "=== Learnings ($LEARN_COUNT) ==="
+    jq -r '.learnings[-5:][] | "⚠️ \(.rule)"' "$LEARNINGS" 2>/dev/null
+  fi
+fi
+
+echo ""
 echo "Status: Plan=$PLAN | Glossary=$GLOSSARY_EXISTS | Design=$DESIGN"
 
 if [ "$PLAN" = "no" ]; then

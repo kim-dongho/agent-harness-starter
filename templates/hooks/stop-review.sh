@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # harness: stop-review — final verification when agent finishes work
+# 에러 발견 시 .harness/errors.log에 축적하여 learnings loop에 활용
 set -euo pipefail
 
 CONFIG="$CLAUDE_PROJECT_DIR/harness.config.json"
@@ -8,6 +9,7 @@ if [ ! -f "$CONFIG" ]; then
 fi
 
 CONTEXT=""
+HAS_ERRORS=false
 
 # 1. Build check
 LANGUAGE=$(jq -r '.project.language // "typescript"' "$CONFIG")
@@ -17,6 +19,7 @@ if [ "$LANGUAGE" = "typescript" ]; then
   if [ "$ERROR_COUNT" -gt 0 ]; then
     ERRORS=$(echo "$BUILD_RESULT" | grep "error TS" | head -10)
     CONTEXT="$CONTEXT\n❌ Build failed — $ERROR_COUNT type errors:\n$ERRORS"
+    HAS_ERRORS=true
   fi
 fi
 
@@ -32,6 +35,7 @@ LINT_ERRORS=$(echo "$LINT_RESULT" | grep -c "error" || true)
 if [ "$LINT_ERRORS" -gt 0 ]; then
   LINT_SUMMARY=$(echo "$LINT_RESULT" | grep -iE "error|✖|×" | head -5)
   CONTEXT="$CONTEXT\n⚠️ Lint errors ($LINT_ERRORS):\n$LINT_SUMMARY"
+  HAS_ERRORS=true
 fi
 
 # 3. Test check
@@ -41,10 +45,11 @@ if command -v npx &>/dev/null; then
   if echo "$TEST_RESULT" | grep -qiE "FAIL|failed|✗|×"; then
     FAILED=$(echo "$TEST_RESULT" | grep -iE "FAIL|✗|×" | head -5)
     CONTEXT="$CONTEXT\n❌ Tests failed:\n$FAILED"
+    HAS_ERRORS=true
   fi
 fi
 
-# 4. Scope check — git diff로 변경된 파일이 allowed scope 안인지
+# 4. Scope check
 CHANGED=$(git diff --name-only HEAD 2>/dev/null || true)
 if [ -n "$CHANGED" ]; then
   SCOPE_VIOLATIONS=$(node -e "
@@ -63,12 +68,18 @@ if (violations.length > 0) console.log(violations.join('\n'));
 
   if [ -n "$SCOPE_VIOLATIONS" ]; then
     CONTEXT="$CONTEXT\n⚠️ Files modified outside allowed scopes:\n$SCOPE_VIOLATIONS"
+    HAS_ERRORS=true
   fi
+fi
+
+# 5. 에러 있으면 .harness/errors.log에 축적 (learnings loop용)
+if [ "$HAS_ERRORS" = true ]; then
+  mkdir -p "$CLAUDE_PROJECT_DIR/.harness"
+  echo -e "--- $(date -u +%Y-%m-%dT%H:%M:%SZ) ---$CONTEXT\n" >> "$CLAUDE_PROJECT_DIR/.harness/errors.log"
 fi
 
 if [ -n "$CONTEXT" ]; then
   echo -e "=== Harness Final Review ===$CONTEXT"
-  # non-blocking: exit 0으로 피드백만 제공
 fi
 
 exit 0

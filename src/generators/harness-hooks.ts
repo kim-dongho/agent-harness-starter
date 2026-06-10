@@ -102,6 +102,16 @@ export async function setupHarnessHooks(projectDir: string, agent: string): Prom
             command: '${CLAUDE_PROJECT_DIR}/.claude/hooks/stop-review.sh',
             statusMessage: 'Running final harness review...',
           },
+          {
+            type: 'agent',
+            prompt: [
+              '.harness/errors.log 파일이 존재하면 최근 에러를 분석하여 .harness/learnings.json에 학습 기록을 추가하라.',
+              '파일이 없거나 비어있으면 아무것도 하지 마라.',
+              '기록 형식: { "id": "learn-NNN", "date": "YYYY-MM-DD", "category": "code-pattern|architecture|convention|testing|scope", "mistake": "한 줄 요약", "correction": "올바른 방법", "rule": "앞으로 지켜야 할 규칙" }',
+              '분석 후 errors.log를 비운다.',
+            ].join('\n'),
+            timeout: 30,
+          },
         ],
       },
     ],
