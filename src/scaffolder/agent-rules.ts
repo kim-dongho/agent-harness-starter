@@ -84,22 +84,6 @@ async function copySkills(projectDir: string, stacks: string[], agent: AgentValu
   // 스택 카테고리별 skills 복사
   const categories = new Set(stacks.map((s) => getStackCategory(s as any)));
 
-  if (categories.has('frontend') || categories.has('mobile')) {
-    const feSrc = path.join(skillsSrc, 'frontend');
-    if (await fs.pathExists(feSrc)) {
-      await fs.copy(feSrc, skillsDest, { overwrite: false });
-      fileCount += await countFiles(feSrc);
-    }
-  }
-
-  if (categories.has('node-backend') || categories.has('go') || categories.has('python') || categories.has('java') || categories.has('rust')) {
-    const beSrc = path.join(skillsSrc, 'backend');
-    if (await fs.pathExists(beSrc)) {
-      await fs.copy(beSrc, skillsDest, { overwrite: false });
-      fileCount += await countFiles(beSrc);
-    }
-  }
-
   if (categories.has('blockchain')) {
     const bcSrc = path.join(skillsSrc, 'blockchain');
     if (await fs.pathExists(bcSrc)) {

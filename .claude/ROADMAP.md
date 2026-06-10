@@ -58,14 +58,20 @@
 
 ## Phase 3 — 고도화
 
-### 3-1. Learnings Loop
-- [ ] 에이전트 실수 시 자동으로 rules 업데이트 (파일 기반, `.harness/learnings.json`)
-- [ ] 프로젝트별 학습된 패턴을 하네스에 반영
+### 3-1. Learnings Loop ✅
+- [x] Stop hook에서 에러 발생 시 `.harness/errors.log`에 자동 축적
+- [x] agent hook이 errors.log 분석 → `.harness/learnings.json`에 규칙 기록
+- [x] session-init에서 최근 learnings 자동 주입
+- [x] `/learn` skill — 수동 학습 기록도 가능
+- [x] 에러 없으면 토큰 0 (조건부 실행)
 
-### 3-2. Adversarial Multi-Agent
-- [ ] Planner → Plan Reviewer (격리된 컨텍스트) → 최대 3회 반복
-- [ ] Implementer → Code Reviewer (격리된 컨텍스트) → 최대 3회 반복
-- [ ] GO/NO-GO 시그널 — NO-GO 시 롤백
+### 3-2. Adversarial Multi-Agent ✅ (기본) / ⬜ (고도화)
+- [x] Stop hook agent가 변경 코드 자동 리뷰 (git diff 기반)
+- [x] 문제 발견 시 ok: false → 원래 에이전트가 수정
+- [x] learnings loop과 하나의 agent hook에 통합 (토큰 절약)
+- [ ] **고도화: filesystem-as-message-bus** — feedback.md + git commits로 완전 격리된 리뷰
+- [ ] **고도화: 최대 3회 반복** — Reviewer NO-GO 시 Implementer 수정 → 재리뷰 루프
+- [ ] **고도화: Plan Review** — Planner → Plan Reviewer 격리 리뷰 (구현 전 계획 검증)
 
 ### 3-3. Intent Verification
 - [ ] Spec + 테스트 + 코드 변경 3개 신호 동시 비교 — 의도 이탈 감지
@@ -79,6 +85,10 @@
 ### 3-5. Progressive Context Loading
 - [ ] 단계별 필요한 규칙만 로드 (토큰 60-95% 절약)
 - [ ] Trellis 패턴 — monolithic CLAUDE.md → 점진적 스펙 로딩
+
+### 3-6. Skills 최적화 ✅
+- [x] 21개 → 10개 정리 (중복/stack rules 이관)
+- [x] frontend/, backend/ skills 폴더 제거
 
 ---
 
