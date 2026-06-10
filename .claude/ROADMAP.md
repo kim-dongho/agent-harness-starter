@@ -73,8 +73,8 @@
 - [x] 문제 발견 시 ok: false → 원래 에이전트가 수정
 - [x] 무한 루프 방지 — review-count 3회 초과 시 스킵
 - [x] learnings loop과 하나의 agent hook에 통합 (토큰 절약)
-- [ ] **고도화: filesystem-as-message-bus** — feedback.md + git commits로 완전 격리된 리뷰
-- [ ] **고도화: Plan Review** — Planner → Plan Reviewer 격리 리뷰 (구현 전 계획 검증)
+- [x] **고도화: filesystem-as-message-bus** — feedback.md 기반 리뷰 결과 기록 + 이전 피드백 반영 확인
+- [x] **고도화: Plan Review** — /plan skill에 리뷰 단계 추가 + 5개 에이전트에 plan-reviewer 서브에이전트 생성
 
 ### 3-3. Intent Verification
 - [ ] Spec + 테스트 + 코드 변경 3개 신호 동시 비교 — 의도 이탈 감지
