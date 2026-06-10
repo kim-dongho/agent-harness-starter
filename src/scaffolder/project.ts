@@ -5,8 +5,18 @@
  * 모노레포: Turborepo 루트 + 각 스택별 apps/ 생성 + 공유 패키지
  */
 import path from 'node:path';
-import { execSync } from 'node:child_process';
+import { execSync, exec } from 'node:child_process';
 import fs from 'fs-extra';
+
+/** execSync 대신 비동기로 실행 — spinner 애니메이션이 블로킹되지 않도록 */
+function execAsync(cmd: string, opts: { cwd?: string; timeout?: number } = {}): Promise<string> {
+  return new Promise((resolve, reject) => {
+    exec(cmd, { cwd: opts.cwd, timeout: opts.timeout ?? 300000, maxBuffer: 10 * 1024 * 1024 }, (err, stdout, stderr) => {
+      if (err) reject(err);
+      else resolve(stdout.toString());
+    });
+  });
+}
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
 import { getGenerateCommand, needsManualSetup } from '../generators/commands.js';
@@ -14,6 +24,7 @@ import { manualSetup } from '../generators/manual.js';
 import { setupTestFramework, installSelectedLibraries, scaffoldArchitecture } from '../generators/post-process.js';
 import { setupMonorepoSharedPackages } from '../generators/monorepo.js';
 import { getStackLabel, getAppName } from './utils.js';
+import { getStackCategory } from '../constants.js';
 import type { UserChoices, StackConfig } from '../prompts/types.js';
 
 /**
@@ -54,12 +65,12 @@ async function createSingleProject(
 
   if (command) {
     // CLI 도구로 생성 시도
-    spinner.start(`${stackLabel} 프로젝트 생성 중...`);
+    spinner.start(`${stackLabel} 프로젝트 생성 중... (시간이 걸릴 수 있습니다)`);
     const cwd = command.cwd === 'parent' ? path.dirname(projectDir) : projectDir;
     if (command.cwd === 'project') await fs.ensureDir(projectDir);
 
     try {
-      execSync(`${command.cmd} ${command.args.join(' ')}`, { cwd, stdio: 'pipe' });
+      await execAsync(`${command.cmd} ${command.args.join(' ')}`, { cwd, timeout: 300000 });
       spinner.stop(`${stackLabel} 프로젝트 생성 완료`);
       steps.push(`${pc.green('✓')} ${stackLabel} — CLI로 생성`);
     } catch {
@@ -91,6 +102,19 @@ async function createSingleProject(
   await scaffoldArchitecture(projectDir, config);
   await setupTestFramework(projectDir, config);
   await installSelectedLibraries(projectDir, config);
+
+  // 모바일/블록체인은 build 스크립트가 없으므로 turbo 호환용 빈 스크립트 추가
+  const category = getStackCategory(config.stack);
+  if (['mobile', 'blockchain'].includes(category)) {
+    const pkgPath = path.join(projectDir, 'package.json');
+    if (await fs.pathExists(pkgPath)) {
+      const pkg = await fs.readJson(pkgPath);
+      pkg.scripts = pkg.scripts ?? {};
+      if (!pkg.scripts.build) pkg.scripts.build = 'echo "No build step"';
+      if (!pkg.scripts.dev) pkg.scripts.dev = pkg.scripts.start ?? 'echo "No dev step"';
+      await fs.writeJson(pkgPath, pkg, { spaces: 2 });
+    }
+  }
 }
 
 // ─── 모노레포 ───

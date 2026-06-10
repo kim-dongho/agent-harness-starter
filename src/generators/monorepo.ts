@@ -200,6 +200,32 @@ export default [
 // ─── 공유 Biome 설정 ───
 
 async function setupSharedBiome(projectDir: string): Promise<void> {
+  // 루트 devDependencies에 @biomejs/biome 추가
+  const rootPkgPath = path.join(projectDir, 'package.json');
+  const rootPkg = await fs.readJson(rootPkgPath);
+  rootPkg.devDependencies = rootPkg.devDependencies ?? {};
+  rootPkg.devDependencies['@biomejs/biome'] = '^1.9.0';
+  rootPkg.scripts = rootPkg.scripts ?? {};
+  rootPkg.scripts.lint = 'biome check .';
+  rootPkg.scripts.format = 'biome check --write .';
+  await fs.writeJson(rootPkgPath, rootPkg, { spaces: 2 });
+
+  // apps 내 package.json의 lint 스크립트를 biome으로 변경
+  const appsDir = path.join(projectDir, 'apps');
+  if (await fs.pathExists(appsDir)) {
+    const apps = await fs.readdir(appsDir);
+    for (const app of apps) {
+      const appPkgPath = path.join(appsDir, app, 'package.json');
+      if (await fs.pathExists(appPkgPath)) {
+        const appPkg = await fs.readJson(appPkgPath);
+        if (appPkg.scripts?.lint) {
+          appPkg.scripts.lint = 'biome check .';
+        }
+        await fs.writeJson(appPkgPath, appPkg, { spaces: 2 });
+      }
+    }
+  }
+
   // Biome는 루트에 하나만 두면 됨 (모노레포 지원 내장)
   await fs.writeJson(path.join(projectDir, 'biome.json'), {
     $schema: 'https://biomejs.dev/schemas/1.9.0/schema.json',

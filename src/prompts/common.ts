@@ -37,7 +37,7 @@ const CATEGORIES = [
   { value: 'frontend', label: 'Frontend' },
   { value: 'backend', label: 'Backend' },
   { value: 'blockchain', label: 'Blockchain' },
-  { value: 'mobile', label: 'Mobile' },
+  // { value: 'mobile', label: 'Mobile' },
 ] as const;
 
 /** 카테고리 → 스택 매핑 */
@@ -45,7 +45,7 @@ const STACKS_BY_CATEGORY: Record<string, { value: string; label: string }[]> = {
   frontend: [...STACKS.frontend.items],
   backend: [...STACKS.backend.items],
   blockchain: [...STACKS.blockchain.items],
-  mobile: [...STACKS.mobile.items],
+  // mobile: [...STACKS.mobile.items],
 };
 
 /**

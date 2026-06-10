@@ -40,7 +40,7 @@ export const REPO_STRUCTURES = [
   { value: 'polyrepo', label: 'Polyrepo' },
 ] as const;
 
-/** 카테고리별 스택 정의 (프론트엔드, 백엔드, 블록체인, 모바일) */
+/** 카테고리별 스택 정의 (프론트엔드, 백엔드, 블록체인) */
 export const STACKS = {
   frontend: {
     label: 'Frontend',
@@ -52,30 +52,30 @@ export const STACKS = {
       { value: 'nuxt', label: 'Nuxt' },
       { value: 'sveltekit', label: 'SvelteKit' },
       { value: 'angular', label: 'Angular' },
-      { value: 'astro', label: 'Astro' },
       { value: 'remix', label: 'Remix' },
-      { value: 'solid-start', label: 'SolidStart' },
-      { value: 'qwik', label: 'Qwik City' },
+      // { value: 'astro', label: 'Astro' },
+      // { value: 'solid-start', label: 'SolidStart' },
+      // { value: 'qwik', label: 'Qwik City' },
     ],
   },
   backend: {
     label: 'Backend',
     items: [
       { value: 'go-gin', label: 'Go (Gin)' },
-      { value: 'go-echo', label: 'Go (Echo)' },
       { value: 'go-fiber', label: 'Go (Fiber)' },
       { value: 'java-spring', label: 'Java (Spring Boot)' },
       { value: 'python-fastapi', label: 'Python (FastAPI)' },
       { value: 'python-django', label: 'Python (Django)' },
-      { value: 'python-flask', label: 'Python (Flask)' },
       { value: 'node-express', label: 'Node (Express)' },
       { value: 'node-nestjs', label: 'Node (NestJS)' },
-      { value: 'node-hono', label: 'Node (Hono)' },
-      { value: 'node-fastify', label: 'Node (Fastify)' },
       { value: 'rust-axum', label: 'Rust (Axum)' },
-      { value: 'rust-actix', label: 'Rust (Actix)' },
-      { value: 'kotlin-ktor', label: 'Kotlin (Ktor)' },
-      { value: 'dotnet', label: 'C# (.NET)' },
+      // { value: 'go-echo', label: 'Go (Echo)' },
+      // { value: 'python-flask', label: 'Python (Flask)' },
+      // { value: 'node-hono', label: 'Node (Hono)' },
+      // { value: 'node-fastify', label: 'Node (Fastify)' },
+      // { value: 'rust-actix', label: 'Rust (Actix)' },
+      // { value: 'kotlin-ktor', label: 'Kotlin (Ktor)' },
+      // { value: 'dotnet', label: 'C# (.NET)' },
     ],
   },
   blockchain: {
@@ -85,18 +85,18 @@ export const STACKS = {
       { value: 'solidity-foundry', label: 'Solidity (Foundry)' },
       { value: 'solana-anchor', label: 'Solana (Anchor)' },
       { value: 'move-sui', label: 'Move (Sui)' },
-      { value: 'move-aptos', label: 'Move (Aptos)' },
-      { value: 'ton-tact', label: 'TON (Tact)' },
-      { value: 'cosmwasm', label: 'CosmWasm (Rust)' },
+      // { value: 'move-aptos', label: 'Move (Aptos)' },
+      // { value: 'ton-tact', label: 'TON (Tact)' },
+      // { value: 'cosmwasm', label: 'CosmWasm (Rust)' },
     ],
   },
-  mobile: {
-    label: 'Mobile',
-    items: [
-      { value: 'react-native', label: 'React Native' },
-      { value: 'flutter', label: 'Flutter' },
-    ],
-  },
+  // mobile: {
+  //   label: 'Mobile',
+  //   items: [
+  //     { value: 'react-native', label: 'React Native' },
+  //     { value: 'flutter', label: 'Flutter' },
+  //   ],
+  // },
 } as const;
 
 /** AI 에이전트 식별자 타입 */
@@ -108,35 +108,34 @@ export type StackValue =
   | (typeof STACKS.frontend.items)[number]['value']
   | (typeof STACKS.backend.items)[number]['value']
   | (typeof STACKS.blockchain.items)[number]['value']
-  | (typeof STACKS.mobile.items)[number]['value'];
+  // 주석처리된 스택 타입 유지 (나중에 활성화 시 사용)
+  | 'astro' | 'solid-start' | 'qwik'
+  | 'go-echo' | 'python-flask' | 'node-hono' | 'node-fastify' | 'rust-actix' | 'kotlin-ktor' | 'dotnet'
+  | 'move-aptos' | 'ton-tact' | 'cosmwasm'
+  | 'react-native' | 'flutter';
 
 /** 프론트엔드 스택 목록 */
 const FRONTEND_STACKS: StackValue[] = [
   'nextjs-app', 'nextjs-pages', 'react-vite', 'vue-vite', 'nuxt',
-  'sveltekit', 'angular', 'astro', 'remix', 'solid-start', 'qwik',
+  'sveltekit', 'angular', 'remix',
 ];
 
 /** Node.js 백엔드 스택 목록 */
 const NODE_BACKEND_STACKS: StackValue[] = [
-  'node-express', 'node-nestjs', 'node-hono', 'node-fastify',
+  'node-express', 'node-nestjs',
 ];
 
 /** Go 백엔드 스택 목록 */
-const GO_STACKS: StackValue[] = ['go-gin', 'go-echo', 'go-fiber'];
+const GO_STACKS: StackValue[] = ['go-gin', 'go-fiber'];
 /** Python 백엔드 스택 목록 */
-const PYTHON_STACKS: StackValue[] = ['python-fastapi', 'python-django', 'python-flask'];
+const PYTHON_STACKS: StackValue[] = ['python-fastapi', 'python-django'];
 /** Java 백엔드 스택 목록 */
 const JAVA_STACKS: StackValue[] = ['java-spring'];
 /** Rust 백엔드 스택 목록 */
-const RUST_STACKS: StackValue[] = ['rust-axum', 'rust-actix'];
-/** Kotlin 백엔드 스택 목록 */
-const KOTLIN_STACKS: StackValue[] = ['kotlin-ktor'];
-/** .NET 백엔드 스택 목록 */
-const DOTNET_STACKS: StackValue[] = ['dotnet'];
+const RUST_STACKS: StackValue[] = ['rust-axum'];
 /** 블록체인 스택 목록 */
 const BLOCKCHAIN_STACKS: StackValue[] = [
-  'solidity-hardhat', 'solidity-foundry', 'solana-anchor',
-  'move-sui', 'move-aptos', 'ton-tact', 'cosmwasm',
+  'solidity-hardhat', 'solidity-foundry', 'solana-anchor', 'move-sui',
 ];
 /** 모바일 스택 목록 */
 const MOBILE_STACKS: StackValue[] = ['react-native', 'flutter'];
@@ -160,10 +159,10 @@ export function getStackCategory(stack: StackValue) {
   if (PYTHON_STACKS.includes(stack)) return 'python';
   if (JAVA_STACKS.includes(stack)) return 'java';
   if (RUST_STACKS.includes(stack)) return 'rust';
-  if (KOTLIN_STACKS.includes(stack)) return 'kotlin';
-  if (DOTNET_STACKS.includes(stack)) return 'dotnet';
+  if (['kotlin-ktor'].includes(stack)) return 'kotlin';
+  if (['dotnet'].includes(stack)) return 'dotnet';
   if (BLOCKCHAIN_STACKS.includes(stack)) return 'blockchain';
-  if (MOBILE_STACKS.includes(stack)) return 'mobile';
+  if (['react-native', 'flutter'].includes(stack)) return 'mobile';
   return 'unknown';
 }
 

@@ -102,7 +102,7 @@ function getStackLabel(stack: StackValue): string {
     ...STACKS.frontend.items,
     ...STACKS.backend.items,
     ...STACKS.blockchain.items,
-    ...STACKS.mobile.items,
+    // ...STACKS.mobile.items,
   ];
   return all.find((s) => s.value === stack)?.label ?? stack;
 }

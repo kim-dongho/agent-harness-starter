@@ -77,10 +77,22 @@ export async function scaffold(choices: UserChoices, opts?: { silent?: boolean }
 
   // Step 4. Docker 설정
   if (choices.docker) {
-    spinner.start('Docker 설정 생성 중...');
-    await setupDocker(projectDir, choices);
-    spinner.stop('Docker 설정 생성 완료');
-    steps.push(`${pc.green('✓')} Docker — Dockerfile + docker-compose.yml`);
+    const NO_DOCKER_CATEGORIES = ['blockchain', 'mobile'];
+    const stacks = choices.stacks ?? [choices];
+    const unsupported = stacks.filter((s) => NO_DOCKER_CATEGORIES.includes(getStackCategory(s.stack)));
+    const supported = stacks.filter((s) => !NO_DOCKER_CATEGORIES.includes(getStackCategory(s.stack)));
+
+    if (unsupported.length > 0) {
+      const names = unsupported.map((s) => s.stack).join(', ');
+      if (!silent) p.log.warn(`${names} — Docker를 지원하지 않습니다 (블록체인은 온체인 배포, 모바일은 네이티브 빌드 필요)`);
+    }
+
+    if (supported.length > 0) {
+      spinner.start('Docker 설정 생성 중...');
+      await setupDocker(projectDir, choices);
+      spinner.stop('Docker 설정 생성 완료');
+      steps.push(`${pc.green('✓')} Docker — Dockerfile + docker-compose.yml`);
+    }
   }
 
   // Step 4. Graphify Knowledge Graph
