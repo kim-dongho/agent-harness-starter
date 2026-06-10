@@ -12,7 +12,7 @@ export const claudeAdapter: AgentAdapter = {
   supportsHooks: true,
   supportsSkills: true,
 
-  async generate(_root, config, stackRules) {
+  async generate(_root, config, stackRules, stackRulesByDir) {
     const files = [];
 
     // CLAUDE.md — 프로젝트 컨텍스트 + 코딩 원칙
@@ -46,8 +46,16 @@ export const claudeAdapter: AgentAdapter = {
       content: buildWorkflowRules(config),
     });
 
-    // .claude/rules/stack.md — 스택별 규칙 통합
-    if (stackRules) {
+    // .claude/rules/stack/{name}.md — 스택별 규칙 분리
+    if (stackRulesByDir && Object.keys(stackRulesByDir).length > 0) {
+      for (const [dir, content] of Object.entries(stackRulesByDir)) {
+        files.push({
+          path: `.claude/rules/stack/${dir}.md`,
+          content,
+        });
+      }
+    } else if (stackRules) {
+      // fallback: 분리 데이터 없으면 하나로
       files.push({
         path: '.claude/rules/stack.md',
         content: stackRules,

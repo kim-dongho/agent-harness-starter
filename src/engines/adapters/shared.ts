@@ -164,3 +164,26 @@ export async function loadStackRules(templatesDir: string, stackDirs: string[]):
 
   return parts.join('\n\n');
 }
+
+/** templates/rules/stack/ 에서 스택별로 분리하여 반환한다 */
+export async function loadStackRulesByDir(templatesDir: string, stackDirs: string[]): Promise<Record<string, string>> {
+  const result: Record<string, string> = {};
+
+  for (const dir of stackDirs) {
+    const dirPath = path.join(templatesDir, 'rules', 'stack', dir);
+    if (!(await fs.pathExists(dirPath))) continue;
+
+    const parts: string[] = [];
+    const files = await fs.readdir(dirPath);
+    for (const file of files.sort()) {
+      if (!file.endsWith('.md')) continue;
+      const content = await fs.readFile(path.join(dirPath, file), 'utf-8');
+      parts.push(content.trim());
+    }
+    if (parts.length > 0) {
+      result[dir] = parts.join('\n\n');
+    }
+  }
+
+  return result;
+}

@@ -9,7 +9,7 @@ import fs from 'fs-extra';
 import { getStackRuleDirs, getStackCategory, type AgentValue } from '../constants.js';
 import { TEMPLATES_DIR } from './utils.js';
 import { getAdapter, type AgentType } from '../engines/adapters/index.js';
-import { loadStackRules } from '../engines/adapters/shared.js';
+import { loadStackRules, loadStackRulesByDir } from '../engines/adapters/shared.js';
 import type { HarnessConfig } from '../engines/adapters/types.js';
 import type { UserChoices } from '../prompts/types.js';
 
@@ -40,10 +40,11 @@ export async function setupAgentRules(projectDir: string, choices: UserChoices):
     : [choices.stack];
   const stackDirs = [...new Set(stacksToProcess.flatMap((s) => getStackRuleDirs(s as any)))];
   const stackRules = await loadStackRules(TEMPLATES_DIR, stackDirs);
+  const stackRulesByDir = await loadStackRulesByDir(TEMPLATES_DIR, stackDirs);
 
   // 3. 어댑터로 에이전트 설정 파일 동적 생성
   const adapter = getAdapter(choices.agent as AgentType);
-  const output = await adapter.generate(projectDir, config, stackRules);
+  const output = await adapter.generate(projectDir, config, stackRules, stackRulesByDir);
 
   for (const file of output.files) {
     const dest = path.join(projectDir, file.path);

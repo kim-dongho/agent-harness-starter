@@ -86,5 +86,5 @@ export interface AgentAdapter {
   /** skills(SKILL.md) 지원 여부 */
   supportsSkills: boolean;
   /** config에서 에이전트 설정 파일 생성 */
-  generate(projectRoot: string, config: HarnessConfig, stackRules: string): Promise<AdapterOutput>;
+  generate(projectRoot: string, config: HarnessConfig, stackRules: string, stackRulesByDir?: Record<string, string>): Promise<AdapterOutput>;
 }
