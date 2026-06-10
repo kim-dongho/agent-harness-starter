@@ -1,7 +1,8 @@
 /**
- * Windsurf 어댑터
+ * Windsurf (Devin Desktop) 어댑터
  *
  * .windsurf/rules/*.md (trigger frontmatter)
+ * Devin Local에서 서브에이전트 지원
  */
 import type { AgentAdapter, HarnessConfig, AdapterOutput } from './types.js';
 import { buildProjectContext, buildCodingPrinciples, buildConventionRules, buildCodingStandards, buildWorkflowRules } from './shared.js';
@@ -23,7 +24,6 @@ export const windsurfAdapter: AgentAdapter = {
   async generate(_root, config, stackRules, stackRulesByDir) {
     const files = [];
 
-    // .windsurf/rules/harness.md — 프로젝트 컨텍스트 + 원칙 + 컨벤션 + 워크플로우
     files.push({
       path: '.windsurf/rules/harness.md',
       content: wrapWindsurf([

@@ -11,6 +11,7 @@ import { clineAdapter } from './cline.js';
 import { copilotAdapter } from './copilot.js';
 import { aiderAdapter } from './aider.js';
 import { geminiAdapter } from './gemini.js';
+import { codexAdapter } from './codex.js';
 
 const registry: Record<AgentType, AgentAdapter> = {
   claude: claudeAdapter,
@@ -20,6 +21,7 @@ const registry: Record<AgentType, AgentAdapter> = {
   copilot: copilotAdapter,
   aider: aiderAdapter,
   gemini: geminiAdapter,
+  codex: codexAdapter,
 };
 
 export function getAdapter(type: AgentType): AgentAdapter {

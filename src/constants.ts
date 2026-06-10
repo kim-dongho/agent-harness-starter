@@ -14,6 +14,7 @@ export const AGENTS = [
   { value: 'copilot', label: 'GitHub Copilot', dir: '.github' },
   { value: 'aider', label: 'Aider', dir: '.aider' },
   { value: 'gemini', label: 'Gemini CLI', dir: '.gemini' },
+  { value: 'codex', label: 'OpenAI Codex CLI', dir: '.codex' },
 ] as const;
 
 // ─── 워크플로우 옵션 ───

@@ -5,7 +5,7 @@
  */
 
 /** 지원하는 에이전트 타입 */
-export type AgentType = 'claude' | 'cursor' | 'windsurf' | 'cline' | 'copilot' | 'aider' | 'gemini';
+export type AgentType = 'claude' | 'cursor' | 'windsurf' | 'cline' | 'copilot' | 'aider' | 'gemini' | 'codex';
 
 /** 어댑터가 생성한 파일 */
 export interface GeneratedFile {

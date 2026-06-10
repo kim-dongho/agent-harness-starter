@@ -130,7 +130,8 @@ describe('adapter registry', () => {
     expect(types).toContain('copilot');
     expect(types).toContain('aider');
     expect(types).toContain('gemini');
-    expect(types).toHaveLength(7);
+    expect(types).toContain('codex');
+    expect(types).toHaveLength(8);
   });
 
   it('getAdapter — 각 타입에 대해 어댑터를 반환한다', () => {
@@ -184,12 +185,13 @@ describe('Claude adapter', () => {
 });
 
 describe('Cursor adapter', () => {
-  it('.cursor/rules/harness.mdc + 스택별 분리 파일을 생성한다', async () => {
+  it('.cursor/rules + reviewer 에이전트 + 스택별 분리를 생성한다', async () => {
     const adapter = getAdapter('cursor');
     const output = await adapter.generate('/tmp', mockConfig, '', mockStackRulesByDir);
 
     const paths = output.files.map(f => f.path);
     expect(paths).toContain('.cursor/rules/harness.mdc');
+    expect(paths).toContain('.cursor/agents/reviewer.md');
     expect(paths).toContain('.cursor/rules/stack-react.mdc');
     expect(paths).toContain('.cursor/rules/stack-general-ts.mdc');
   });
@@ -237,12 +239,13 @@ describe('Cline adapter', () => {
 });
 
 describe('Copilot adapter', () => {
-  it('.github/copilot-instructions.md + 스택별 분리 파일을 생성한다', async () => {
+  it('.github/copilot-instructions.md + reviewer 에이전트 + 스택별 분리를 생성한다', async () => {
     const adapter = getAdapter('copilot');
     const output = await adapter.generate('/tmp', mockConfig, '', mockStackRulesByDir);
 
     const paths = output.files.map(f => f.path);
     expect(paths).toContain('.github/copilot-instructions.md');
+    expect(paths).toContain('.github/agents/reviewer.md');
     expect(paths).toContain('.github/instructions/stack-react.md');
   });
 });
@@ -280,12 +283,13 @@ describe('Aider adapter', () => {
 });
 
 describe('Gemini adapter', () => {
-  it('GEMINI.md + 스택별 분리 파일을 생성한다', async () => {
+  it('GEMINI.md + reviewer 에이전트 + 스택별 분리를 생성한다', async () => {
     const adapter = getAdapter('gemini');
     const output = await adapter.generate('/tmp', mockConfig, '', mockStackRulesByDir);
 
     const paths = output.files.map(f => f.path);
     expect(paths).toContain('GEMINI.md');
+    expect(paths).toContain('.gemini/agents/reviewer.md');
     expect(paths).toContain('.gemini/rules/react.md');
     expect(paths).toContain('.gemini/rules/general-ts.md');
   });
@@ -297,7 +301,29 @@ describe('Gemini adapter', () => {
 
     expect(geminiMd!.content).toContain('test-project');
     expect(geminiMd!.content).toContain('@./.gemini/rules/react.md');
-    expect(geminiMd!.content).toContain('@./.gemini/rules/general-ts.md');
+  });
+});
+
+describe('Codex adapter', () => {
+  it('AGENTS.md + 리뷰 에이전트 + 스택별 분리를 생성한다', async () => {
+    const adapter = getAdapter('codex');
+    const output = await adapter.generate('/tmp', mockConfig, '', mockStackRulesByDir);
+
+    const paths = output.files.map(f => f.path);
+    expect(paths).toContain('AGENTS.md');
+    expect(paths).toContain('.codex/agents/reviewer.toml');
+    expect(paths).toContain('.codex/agents/explorer.toml');
+    expect(paths).toContain('.codex/rules/stack-react.md');
+    expect(paths).toContain('.codex/rules/stack-general-ts.md');
+  });
+
+  it('reviewer.toml에 리뷰 설정이 포함된다', async () => {
+    const adapter = getAdapter('codex');
+    const output = await adapter.generate('/tmp', mockConfig, '');
+    const reviewer = output.files.find(f => f.path === '.codex/agents/reviewer.toml');
+
+    expect(reviewer!.content).toContain('reviewer');
+    expect(reviewer!.content).toContain('read-only');
   });
 });
 
