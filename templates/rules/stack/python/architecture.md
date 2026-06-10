@@ -6,6 +6,7 @@
 - f-string을 문자열 포맷팅에 사용한다.
 
 ### FastAPI
+- CORS 미들웨어를 명시적으로 설정한다.
 - 코드는 도메인 기능별로 구조화한다 (`users/router.py`, `users/models.py`, `users/schemas.py`).
 - `async def`는 async I/O를 호출할 때만. 동기/CPU-bound는 `def`로 (FastAPI가 자동 threadpool 실행).
 - DB 세션, 인증 등은 `Depends()`로 의존성 주입한다. `yield`로 cleanup 처리.

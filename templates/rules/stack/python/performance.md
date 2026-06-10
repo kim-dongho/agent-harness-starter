@@ -5,8 +5,3 @@
 
 ### Django
 - I/O가 많은 엔드포인트에는 async view를 사용한다.
-
-## References
-- https://fastapi.tiangolo.com/tutorial/
-- https://docs.djangoproject.com/en/5.1/
-- https://github.com/zhanymkanov/fastapi-best-practices

@@ -8,3 +8,4 @@
 - `style={{}}` 인라인 스타일 사용 금지 — CSS Module, Tailwind, styled-components 등을 사용한다.
 - `document.querySelector` 등 직접 DOM 조작 금지 — `useRef`를 사용한다.
 - props를 5개 이상 전달하지 않는다 — 객체로 묶거나 컴포넌트를 분리한다.
+- 인터랙티브 요소에 접근성을 보장한다 — `tabindex`, `aria-label`, 키보드 핸들러(`onKeyDown`) 제공.

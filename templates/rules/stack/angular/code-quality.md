@@ -1,7 +1,3 @@
 # Angular — 코드 품질
 - 코드 중첩은 최대 2단계까지. 넘으면 메서드나 서비스로 추출한다.
 - 함수는 50줄 이하, 파라미터는 4개 이하로 유지한다.
-
-## References
-- https://angular.dev/guide/signals
-- https://angular.dev/guide/components

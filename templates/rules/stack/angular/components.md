@@ -8,3 +8,4 @@
 - `subscribe()`를 컴포넌트에서 직접 호출하고 `unsubscribe`를 누락하지 않는다 — `async` 파이프 또는 `takeUntilDestroyed`를 사용한다.
 - `document.querySelector`로 DOM에 직접 접근하지 않는다 — `ViewChild`, `ElementRef`를 사용한다.
 - `innerHTML`에 사용자 입력을 바인딩하지 않는다 — `DomSanitizer`를 경유한다.
+- `ChangeDetectionStrategy.OnPush`를 기본으로 사용한다.
