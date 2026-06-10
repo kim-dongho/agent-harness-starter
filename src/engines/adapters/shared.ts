@@ -106,6 +106,15 @@ export function buildWorkflowRules(config: HarnessConfig): string {
   }
   lines.push('');
 
+  // Policy test
+  lines.push('## Policy Test');
+  lines.push('');
+  lines.push('비즈니스 정책(날짜 계산, 금액, 상태 전이, 필터 조건, 외부 연동 규격)이 포함된 코드를 수정할 때:');
+  lines.push('1. 해당 정책을 검증하는 테스트가 있는지 확인한다');
+  lines.push('2. 테스트가 없으면 경계값과 예외 케이스를 커버하는 테스트를 먼저 작성한다');
+  lines.push('3. 정책 수정 후 기존 + 신규 테스트가 모두 통과하는지 확인한다');
+  lines.push('');
+
   // Agent scope
   lines.push('## Agent Scope');
   lines.push(`- Persona: ${config.agent.persona}`);
