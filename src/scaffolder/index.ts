@@ -21,6 +21,8 @@ import { setupDocker } from '../generators/docker.js';
 import { generateReadme } from '../generators/readme.js';
 import { generateEnvExample } from '../generators/env.js';
 import { setupGraphify } from './graphify.js';
+import { generateHarnessConfig } from '../generators/harness-config.js';
+import { setupHarnessHooks } from '../generators/harness-hooks.js';
 import type { UserChoices } from '../prompts/types.js';
 
 /**
@@ -62,11 +64,19 @@ export async function scaffold(choices: UserChoices, opts?: { silent?: boolean }
   const requiredNode = getRequiredNodeVersion(choices) ?? '22';
   await fs.writeFile(path.join(projectDir, '.nvmrc'), requiredNode + '\n');
 
-  // Step 2. 에이전트 룰 세팅
+  // Step 1.5. harness.config.json 생성
+  spinner.start('harness.config.json 생성 중...');
+  await generateHarnessConfig(projectDir, choices);
+  spinner.stop('harness.config.json 생성 완료');
+  steps.push(`${pc.green('✓')} harness.config.json`);
+
+  // Step 2. 에이전트 룰 + hooks 세팅
   spinner.start('에이전트 룰 세팅 중');
   const ruleCount = await setupAgentRules(projectDir, choices);
-  spinner.stop(`에이전트 룰 세팅 완료 — ${ruleCount}개 룰 파일`);
+  const hookCount = await setupHarnessHooks(projectDir, choices.agent);
+  spinner.stop(`에이전트 룰 세팅 완료 — ${ruleCount}개 룰 + ${hookCount}개 hooks`);
   steps.push(`${pc.green('✓')} 에이전트 룰 (${choices.agent}) — ${ruleCount}개 파일`);
+  if (hookCount > 0) steps.push(`${pc.green('✓')} Harness hooks — scope-guard, scaffold-guard, post-write, session-init`);
 
   // Step 3. README + .env.example
   spinner.start('README + .env.example 생성 중...');
