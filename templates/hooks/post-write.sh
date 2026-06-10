@@ -17,7 +17,29 @@ fi
 REL_PATH=$(realpath --relative-to="$CLAUDE_PROJECT_DIR" "$FILE_PATH" 2>/dev/null || echo "$FILE_PATH")
 CONTEXT=""
 
-# 1. Import violation check (non-blocking — context feedback only)
+# 1. Lint check (non-blocking — context feedback)
+LINTER=$(jq -r '.development.linter // "eslint"' "$CONFIG")
+if [ "$LINTER" = "biome" ]; then
+  LINT_RESULT=$(npx biome check "$FILE_PATH" 2>&1) || true
+else
+  LINT_RESULT=$(npx eslint "$FILE_PATH" --no-error-on-unmatched-pattern 2>&1) || true
+fi
+
+if echo "$LINT_RESULT" | grep -qiE "error|✖|×"; then
+  LINT_ERRORS=$(echo "$LINT_RESULT" | grep -iE "error|✖|×" | head -5)
+  CONTEXT="$CONTEXT\n⚠️ Lint errors in $REL_PATH:\n$LINT_ERRORS"
+fi
+
+# 2. Type check (non-blocking — context feedback)
+LANGUAGE=$(jq -r '.project.language // "typescript"' "$CONFIG")
+if [ "$LANGUAGE" = "typescript" ]; then
+  TS_RESULT=$(npx tsc --noEmit --pretty false 2>&1 | grep "$REL_PATH" | head -5) || true
+  if [ -n "$TS_RESULT" ]; then
+    CONTEXT="$CONTEXT\n⚠️ Type errors in $REL_PATH:\n$TS_RESULT"
+  fi
+fi
+
+# 3. Import violation check (non-blocking — context feedback)
 VIOLATIONS=$(node -e "
 const fs = require('fs');
 const path = require('path');

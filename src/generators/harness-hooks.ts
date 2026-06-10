@@ -94,6 +94,17 @@ export async function setupHarnessHooks(projectDir: string, agent: string): Prom
         ],
       },
     ],
+    Stop: [
+      {
+        hooks: [
+          {
+            type: 'command',
+            command: '${CLAUDE_PROJECT_DIR}/.claude/hooks/stop-review.sh',
+            statusMessage: 'Running final harness review...',
+          },
+        ],
+      },
+    ],
   };
 
   await fs.writeJson(settingsPath, settings, { spaces: 2 });

@@ -44,5 +44,33 @@ if [ -f "$GLOSSARY" ]; then
   echo "Domain glossary ($TERM_COUNT terms): $TERMS"
 fi
 
+# SDLC Pipeline status
+echo ""
+echo "=== SDLC Pipeline ==="
+echo "1. /plan    → 기능, 우선순위, 마일스톤"
+echo "2. /analyze → 도메인 용어집 + 기능 스펙"
+echo "3. /design  → 인터페이스, API 계약, 컴포넌트 구조"
+echo "4. /generate <type> <name> → 파일 생성 (직접 Write 금지)"
+echo "5. /start <이슈번호> → 이슈 기반 작업 시작"
+echo "6. /done    → 품질 게이트 + 커밋 + MR"
+echo ""
+
+PLAN="no"; GLOSSARY_EXISTS="no"; DESIGN="no"
+[ -f "$CLAUDE_PROJECT_DIR/docs/plan.json" ] && PLAN="yes"
+[ -f "$CLAUDE_PROJECT_DIR/domain-glossary.json" ] && GLOSSARY_EXISTS="yes"
+[ -d "$CLAUDE_PROJECT_DIR/docs/designs" ] && [ "$(ls -A "$CLAUDE_PROJECT_DIR/docs/designs" 2>/dev/null)" ] && DESIGN="yes"
+
+echo "Status: Plan=$PLAN | Glossary=$GLOSSARY_EXISTS | Design=$DESIGN"
+
+if [ "$PLAN" = "no" ]; then
+  echo "→ Next: /plan"
+elif [ "$GLOSSARY_EXISTS" = "no" ]; then
+  echo "→ Next: /analyze"
+elif [ "$DESIGN" = "no" ]; then
+  echo "→ Next: /design"
+else
+  echo "→ Ready: /generate 또는 /start 로 구현 시작"
+fi
+
 echo ""
 exit 0
