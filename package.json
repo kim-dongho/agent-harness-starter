@@ -14,7 +14,9 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/cli.ts",
-    "test": "tsx scripts/test-stacks.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:stacks": "tsx scripts/test-stacks.ts",
     "test:frontend": "tsx scripts/test-stacks.ts frontend",
     "test:backend": "tsx scripts/test-stacks.ts backend",
     "test:blockchain": "tsx scripts/test-stacks.ts blockchain",
@@ -53,6 +55,7 @@
     "@types/node": "^25.9.1",
     "semantic-release": "^25.0.3",
     "tsx": "^4.22.4",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
   }
 }
