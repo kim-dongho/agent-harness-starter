@@ -366,8 +366,12 @@ export async function initHarness(projectDir?: string): Promise<void> {
   });
   if (p.isCancel(confirm)) { p.outro('취소됨'); return; }
 
-  // 5. harness.config.json 생성
+  // 5. harness.config.json 생성 (기존 config가 있으면 adapters merge)
   spinner.start('harness.config.json 생성 중...');
+  const existingConfigPath = path.join(root, 'harness.config.json');
+  const existingAdapters: string[] = await fs.pathExists(existingConfigPath)
+    ? ((await fs.readJson(existingConfigPath)).agent?.adapters ?? [])
+    : [];
 
   const archForbiddenImports: Record<string, Record<string, string[]>> = {
     fsd: { shared: ['features', 'pages', 'app'], entities: ['features', 'pages', 'app'], features: ['widgets', 'pages', 'app'] },
@@ -399,7 +403,7 @@ export async function initHarness(projectDir?: string): Promise<void> {
     agent: {
       persona: 'senior-developer',
       allowedScopes: ['src/**/*', 'tests/**/*'],
-      adapters: [agent as string],
+      adapters: [...new Set([...existingAdapters, agent as string])],
     },
     rules: {
       fileNaming: {
