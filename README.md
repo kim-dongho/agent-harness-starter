@@ -1,199 +1,226 @@
-# agent-harness-starter
+<p align="center">
+  <h1 align="center">agent-harness-starter</h1>
+  <p align="center">AI 코딩 에이전트를 자동으로 제어하는 하네스 시스템</p>
+  <p align="center">
+    <strong>Hooks</strong>로 강제 &middot; <strong>Rules</strong>로 안내 &middot; <strong>Learnings</strong>로 학습 &middot; <strong>Metrics</strong>로 측정
+  </p>
+</p>
 
-프로젝트 스캐폴딩 + AI 에이전트 하네스를 한번에 세팅하는 CLI 도구.
+---
 
-스택 선택 → 보일러플레이트 생성 → 에이전트 룰/스킬/워크플로우 세팅 → Docker/Graphify → 의존성 설치까지 원스톱.
+## What is this?
+
+AI 코딩 에이전트(Claude Code, Gemini CLI, Cursor 등)가 코드를 작성할 때 **자동으로 검증하고, 에러에서 학습하고, 성과를 측정**하는 하네스 시스템입니다.
+
+- **Hook 기반 자동 강제** — 에이전트가 파일을 수정하면 즉시 타입체크 + lint(설정 시) + 블록체인 보안검사(.sol/.rs/.move) 실행
+- **에러 즉시 학습** — 에러 발생 시 `learnings.json`에 규칙 자동 기록, 다음 세션에 주입
+- **Self-healing 추적** — 에이전트가 에러를 감지하고 수정했는지 자동 추적
+- **8개 에이전트 지원** — 같은 hook 스크립트가 모든 에이전트에서 동작
+
+```
+에이전트가 파일 수정
+  → post-write hook 자동 실행
+    → 타입 에러 감지 (TS2322)
+      → metrics.jsonl에 "error" 기록
+      → learnings.json에 "타입 불일치" 학습
+      → 에이전트에게 "원인 설명 + 수정 계획 제시 후 컨펌 받아라" 지시
+        → 에이전트가 수정
+          → post-write hook 다시 실행
+            → metrics.jsonl에 "clean" 기록
+              → self-heal 성공
+```
 
 ## Quick Start
 
+### 새 프로젝트
+
 ```bash
-npx @scope/create-ahs
-# 또는
-node dist/cli.js
+npx @frontend-playground/agent-harness-starter
 ```
 
-## 지원 에이전트
+### 기존 프로젝트에 하네스 추가
 
-| 에이전트       | 룰                                | 스킬 (SKILL.md)     |
-| -------------- | --------------------------------- | ------------------- |
-| Claude Code    | `.claude/rules/`                  | `.claude/skills/`   |
-| Cursor         | `.cursor/rules/*.mdc`             | `.cursor/skills/`   |
-| Windsurf       | `.windsurf/rules/*.md`            | `.windsurf/skills/` |
-| Cline          | `.clinerules/*.md`                | `.cline/skills/`    |
-| GitHub Copilot | `.github/copilot-instructions.md` | `.github/skills/`   |
-| Aider          | `CONVENTIONS.md`                  | -                   |
-| Gemini CLI     | `GEMINI.md`                       | `.gemini/skills/`   |
+```bash
+npx @frontend-playground/agent-harness-starter init
+```
 
-> SKILL.md는 [Agent Skills 오픈 스탠다드](https://agentskills.io)로, Aider를 제외한 모든 에이전트가 동일한 포맷을 지원합니다.
+프로젝트를 자동 스캔하여 언어/프레임워크/린터를 감지하고, 선택한 에이전트에 맞는 hooks + rules + skills를 생성합니다.
 
-## 지원 스택 (31개)
+```
+$ npx @frontend-playground/agent-harness-starter init
 
-### Frontend
+  languages:  typescript, python, go
+  stacks:     nextjs-app, python-fastapi, go-fiber
+  package:    pnpm
+  linters:    eslint, ruff
+  test:       vitest
+  arch:       clean
+```
 
-Next.js (App/Pages) · React (Vite) · Vue (Vite) · Nuxt · SvelteKit · Angular · Astro · Remix · SolidStart · Qwik
+## 스캐폴더 (`create`, default)
 
-### Backend
-
-Go (Gin/Echo/Fiber) · Java (Spring Boot) · Python (FastAPI/Django/Flask) · Node (Express/NestJS/Hono/Fastify) · Rust (Axum/Actix) · Kotlin (Ktor) · C# (.NET)
-
-### Blockchain
-
-Solidity (Hardhat/Foundry) · Solana (Anchor) · Move (Sui/Aptos) · TON (Tact) · CosmWasm
-
-### Mobile
-
-React Native · Flutter
-
-## 선택 플로우
+인자 없이 실행하면 기본으로 스캐폴더가 실행됩니다. 인터랙티브 프롬프트로 옵션을 선택합니다.
 
 ```
 1. 프로젝트 이름
-2. AI 에이전트 (Claude / Cursor / Windsurf / Cline / Copilot / Aider / Gemini)
-3. Graphify Knowledge Graph (Y/N)
-4. Docker (Y/N)
-5. 의존성 자동 설치 (Y/N)
-6. 이슈 트래커 (Jira / None)
-7. 레포 구조 (모노레포 Turborepo / 폴리레포)
-8. 스택 선택 (카테고리 → 스택, 모노레포면 복수 선택)
-9. 스택별 세부 옵션
-   - 언어 (TS/JS)
-   - 아키텍처 (FSD, Atomic, Clean, Layered, DDD 등)
-   - 패키지 매니저 (npm/pnpm/bun/yarn)
-   - 린트 (ESLint+Prettier / Biome)
-   - 네이밍 규칙 (kebab-case / PascalCase / camelCase)
-   - 스타일링, 상태관리, 테스트, 폼, i18n (FE)
-   - ORM, DB, API 스타일, API 문서화 (BE)
-   - 네트워크 (Blockchain)
-   - 상태관리, 네비게이션 (Mobile)
+2. AI 에이전트 (Claude / Cursor / Windsurf / Cline / Copilot / Aider / Gemini / Codex)
+3. 이슈 트래커 (Jira / None)
+4. 레포 구조 (모노레포 Turborepo / 폴리레포)
+5. 스택 선택 (카테고리 → 스택, 모노레포면 복수 선택)
+6. 스택별 세부 옵션 (아키텍처, 린터, 테스트 등)
+7. Docker / Graphify / 의존성 설치 (Y/N)
 ```
+
+## Hook System
+
+모든 에이전트가 동일한 hook 스크립트를 사용합니다. 설정 파일 포맷만 에이전트별로 다릅니다.
+
+### Hooks
+
+| Hook | 시점 | 동작 |
+|------|------|------|
+| **scope-guard** | 파일 수정 전 | 허용 범위 밖 파일 수정 차단 |
+| **scaffold-guard** | 파일 생성 전 | `/generate` 사용 안내 |
+| **post-write** | 파일 수정 후 | lint + 타입체크 + 블록체인 보안 + 즉시 학습 |
+| **session-init** | 세션 시작 | 프로젝트 컨텍스트 + 메트릭 요약 주입 |
+| **stop-review** | 세션 종료 | 빌드 + 테스트 + 스코프 검증 |
+| **learnings-recorder** | 세션 종료 | errors.log → learnings.json 변환 |
+
+### 블록체인 보안 검사 (post-write)
+
+| 파일 | 검사 항목 |
+|------|----------|
+| `.sol` | tx.origin (SWC-115), selfdestruct (SWC-106), delegatecall (SWC-112), floating pragma (SWC-103), reentrancy |
+| `.rs` (Anchor) | unchecked arithmetic, unwrap() in production |
+| `.move` | public entry without assert! |
+
+## 지원 에이전트
+
+8개 에이전트를 지원합니다. hook 스크립트는 동일하고, 환경변수 폴백으로 자동 호환됩니다.
+
+| 에이전트 | Hooks | 설정 파일 | Pre/Post 매핑 |
+|---------|:-----:|---------|------|
+| Claude Code | O | `.claude/settings.json` | PreToolUse / PostToolUse |
+| Gemini CLI | O | `.gemini/settings.json` | BeforeTool / AfterTool |
+| Cursor | O | `.cursor/hooks.json` | onPreEdit / onPostEdit |
+| Windsurf | O | `.windsurf/hooks.json` | pre-action / post-action |
+| Cline | O | `.clinerules/hooks.json` | PreToolUse / PostToolUse |
+| GitHub Copilot | O | `.github/hooks/harness.json` | preToolUse / postToolUse |
+| Codex CLI | \* | `.codex/hooks.json` | PreToolUse / PostToolUse |
+| Aider | - | `.aider.conf.yml` | lint-cmd only |
+
+\* Codex CLI: Bash 명령만 hook 지원 (apply_patch 미지원)
+
+### 멀티 에이전트
+
+한 프로젝트에서 여러 에이전트를 동시에 사용할 수 있습니다.
+
+```bash
+npx @frontend-playground/agent-harness-starter init  # 첫 번째: Claude
+npx @frontend-playground/agent-harness-starter init  # 두 번째: Gemini
+# → harness.config.json의 adapters: ["claude", "gemini"]
+```
+
+- `harness.config.json` — 공유 (single source of truth)
+- `.harness/` (metrics, learnings) — 공유
+- hooks/settings — 에이전트별 독립 (`~/.claude/hooks/`, `.gemini/hooks/`)
+
+## Metrics
+
+하네스의 효과를 측정합니다.
+
+### 확인 방법
+
+**세션 시작 시 자동 요약:**
+```
+📊 차단: 12회 | first-pass: 65% | 에러감지: 28회 (최근 7일)
+```
+
+**CLI로 상세 확인:**
+```bash
+npx @frontend-playground/agent-harness-starter metrics
+```
+
+```
+📊 Harness Metrics (최근 7일)
+─────────────────────────
+scope-guard 차단:    12회
+scaffold-guard 차단:  3회
+post-write 에러 감지: 28회
+self-heal 성공:      22/28 (79%)
+first-pass 성공:     18/28 (64%)
+
+🔥 가장 많은 에러:
+  TS2322 (타입 불일치): 9회
+  TS7006 (암시적 any):  5회
+```
+
+### 메트릭 정의
+
+| 메트릭 | 설명 |
+|--------|------|
+| **차단율** | scope-guard/scaffold-guard가 차단한 횟수 |
+| **first-pass** | 파일의 첫 post-write 이벤트가 에러 없이 통과한 비율 |
+| **self-heal** | 에러 감지 후 같은 파일이 수정되어 clean으로 전환된 비율 |
+
+## 지원 스택
+
+### Frontend (8)
+Next.js App Router · Next.js Pages Router · React (Vite) · Vue (Vite) · Nuxt · SvelteKit · Angular · Remix
+
+### Backend (8)
+Go (Gin) · Go (Fiber) · Java (Spring Boot) · Python (FastAPI) · Python (Django) · Node (Express) · Node (NestJS) · Rust (Axum)
+
+### Blockchain (4)
+Solidity (Hardhat) · Solidity (Foundry) · Solana (Anchor) · Move (Sui)
+
+### 프로젝트 감지 (`init`)
+
+| 감지 대상 | 방법 |
+|----------|------|
+| 언어 (복수) | package.json, go.mod, Cargo.toml, pyproject.toml, pom.xml, Move.toml, foundry.toml |
+| 프레임워크 | deps에서 next/fiber/fastapi 등 매칭 |
+| 린터 (복수) | eslint, biome, golangci-lint, ruff |
+| 패키지 매니저 | lock 파일 기반 (npm/pnpm/yarn/bun) + go/cargo/pip/poetry/maven/gradle/forge/sui |
+| 아키텍처 | src/ 디렉토리 구조 (FSD/Clean/Modular) |
+| 모노레포 | pnpm-workspace.yaml, npm workspaces → 하위 패키지 전체 스캔 |
 
 ## 생성되는 구조
 
-### 폴리레포
-
 ```
 my-project/
-├── src/                        # 스택 보일러플레이트
-├── .claude/                    # AI 에이전트 룰 + 스킬 (Claude 선택 시)
-│   ├── CLAUDE.md
-│   ├── rules/
-│   │   ├── core/               # 공통 규칙 (thinking-model, verify, forbidden-patterns, policy-test)
-│   │   └── react/              # 스택별 규칙
-│   └── skills/
-│       ├── code-review/        # 공통 스킬
-│       ├── accessibility/      # FE 스킬
-│       ├── start/              # 워크플로우 — 작업 시작
-│       ├── done/               # 워크플로우 — 작업 완료
-│       └── review/             # 워크플로우 — 코드 리뷰
-├── Dockerfile                  # Docker 선택 시
-├── docker-compose.yml
-├── .graphifyrc                 # Graphify 선택 시
-├── .env.example                # 환경변수 템플릿 (Jira 토큰 등)
-├── README.md                   # 동적 생성
-└── vitest.config.ts            # 테스트 프레임워크 선택 시
+├── harness.config.json          # 하네스 설정 (single source of truth)
+├── .claude/                     # Claude Code 선택 시
+│   ├── settings.json            #   hook 등록
+│   ├── hooks/                   #   hook 스크립트 7개
+│   ├── rules/                   #   룰 파일
+│   └── skills/                  #   스킬 (code-review, metrics 등)
+├── .gemini/                     # Gemini CLI 선택 시
+│   ├── settings.json
+│   ├── hooks/
+│   └── rules/
+├── .harness/                    # 런타임 상태 (gitignore)
+│   ├── metrics.jsonl            #   메트릭 이벤트 로그
+│   ├── learnings.json           #   자동 학습 규칙
+│   └── errors.log               #   에러 로그
+└── GEMINI.md                    # Gemini 룰 파일 (루트, 에이전트 규약)
 ```
-
-### 모노레포
-
-```
-my-project/
-├── apps/
-│   ├── web/                    # FE 스택
-│   ├── api/                    # BE 스택
-│   └── contracts/              # 블록체인 스택
-├── packages/
-│   ├── typescript-config/      # 공유 tsconfig
-│   └── eslint-config/          # 공유 린트 (또는 biome.json)
-├── .claude/                    # AI 에이전트 룰
-├── turbo.json
-├── pnpm-workspace.yaml         # pnpm 선택 시
-└── docker-compose.yml          # Docker 선택 시
-```
-
-## 워크플로우 Skills
-
-프로젝트 생성 시 워크플로우 스킬이 자동으로 포함됩니다. 이슈 트래커(Jira)와 Git 플랫폼(GitLab)에 맞게 커맨드가 세팅됩니다.
-
-| 스킬                | 설명                                                                           |
-| ------------------- | ------------------------------------------------------------------------------ |
-| `/start <이슈번호>` | 이슈 조회 → 상태 변경 → 브랜치 생성 → 분석 → 복잡도 판단 → 구현 계획           |
-| `/done`             | 품질 게이트 5단계 (lint → test → 정책 → 범위 → 컨벤션) → 커밋 → push → MR 생성 |
-| `/review`           | 금지 패턴 체크 → 정책 검증 → 코드 리뷰 → 심각도별 리포트                       |
-
-### 품질 게이트 (/done)
-
-1. **코드 품질** — lint, type-check 통과
-2. **테스트** — 관련 테스트 통과
-3. **정책 보호** — 정책 키워드 변경 시 테스트 존재 확인
-4. **범위 검증** — 의도하지 않은 파일 변경 없음
-5. **컨벤션** — 커밋 메시지, 불필요한 파일 제외
-
-## 에이전트별 동작 차이
-
-### skills 지원 에이전트 (Claude, Cursor, Windsurf, Cline, Copilot, Gemini)
-
-- **rules**: 핵심 규칙만 (짧게, 항상 로드)
-- **skills**: 상세 가이드 + 워크플로우 (필요할 때만 로드, 토큰 절약)
-- 블록체인 보안 체크리스트는 체인 특화이므로 rules에 포함
-
-### Aider
-
-- **rules**: 보안 포함 전체 규칙 (`CONVENTIONS.md`에 모든 내용 포함)
-- skills 미지원이므로 rules에 전부 포함
-
-## 스킬 목록
-
-### 공통
-
-- `code-review` — 코드 리뷰 체크리스트 (보안/성능/에러/유지보수)
-- `testing` — 테스트 작성 가이드 (AAA 패턴, 커버리지)
-- `commit-convention` — Conventional Commits
-- `naming-convention` — 네이밍 컨벤션
-
-### Frontend
-
-- `accessibility` — 웹 접근성 WCAG 체크리스트
-- `performance` — Core Web Vitals 최적화
-- `seo` — SEO 체크리스트
-- `component-convention` — 컴포넌트 작성 컨벤션
-
-### Backend
-
-- `api-design` — REST API 설계 가이드
-- `error-handling` — 에러 처리 패턴
-- `db-convention` — DB 쿼리/스키마 컨벤션
-
-### Blockchain
-
-- `security-audit` — 스마트 컨트랙트 보안 감사
-
-### Workflow
-
-- `start` — 이슈 기반 작업 시작
-- `done` — 품질 게이트 + 커밋 + MR
-- `review` — 코드 리뷰 + 정책 검증
-
-## 룰 파일 출처
-
-| 스택        | 출처                                                                                                                                   |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Solidity    | [SWC Registry](https://swcregistry.io/)                                                                                                |
-| Solana      | [Sealevel Attacks](https://github.com/coral-xyz/sealevel-attacks)                                                                      |
-| Move        | [Hacken Audit Checklist](https://hacken.io/discover/move-smart-contract-audit-checklist/)                                              |
-| TON         | [CertiK Tact Security](https://www.certik.com/resources/blog/secure-smart-contract-programming-in-tact-popular-mistakes-in-the-ton)    |
-| CosmWasm    | [jcsec Security Spotlight](https://github.com/jcsec-security/cosmwasm-security-spotlight)                                              |
-| React       | [React Docs](https://react.dev/)                                                                                                       |
-| Agent Rules | [PatrickJS/awesome-cursorrules](https://github.com/PatrickJS/awesome-cursorrules), [block/ai-rules](https://github.com/block/ai-rules) |
 
 ## 시작하기
 
 ### 1. 환경변수 설정 (최초 1회)
 
-`~/.zshrc`에 Deploy Token을 추가합니다. 토큰값은 Passbolt에 등록되어 있습니다.
+토큰값은 Passbolt에 등록되어 있습니다.
 
+**macOS / Linux:**
 ```bash
 echo 'export GITLAB_FP_NPM_DEPLOY_TOKEN=토큰값' >> ~/.zshrc
 source ~/.zshrc
+```
+
+**Windows (PowerShell):**
+```powershell
+[System.Environment]::SetEnvironmentVariable('GITLAB_FP_NPM_DEPLOY_TOKEN', '토큰값', 'User')
 ```
 
 ### 2. npm registry 설정 (최초 1회)
@@ -205,88 +232,56 @@ echo -e '@frontend-playground:registry=https://gitlab.dtechlab.com/api/v4/projec
 ### 3. 실행
 
 ```bash
+# 새 프로젝트 생성
 npx @frontend-playground/agent-harness-starter
+
+# 기존 프로젝트에 하네스 세팅
+npx @frontend-playground/agent-harness-starter init
+
+# 메트릭 확인
+npx @frontend-playground/agent-harness-starter metrics
 ```
 
 ## 개발
 
 ```bash
-# 의존성 설치
 npm install
-
-# 개발 모드
-npm run dev
-
-# 빌드
 npm run build
+node dist/cli.js              # 새 프로젝트
+node dist/cli.js init         # 기존 프로젝트
+node dist/cli.js metrics      # 메트릭 확인
 
-# 로컬 테스트
-node dist/cli.js
-
-# Docker 테스트 (95개)
-npm run test:docker
-
-# Docker 테스트 (필터)
-npx tsx scripts/test-docker.ts monorepo
-npx tsx scripts/test-docker.ts go
-npx tsx scripts/test-docker.ts astro
+# 테스트 (132개)
+npx vitest run
 ```
 
 ## 배포
 
-`GITLAB_FP_PROJECT_TOKEN` 환경변수가 필요합니다. Passbolt에 등록되어 있습니다.
+`GITLAB_FP_PROJECT_TOKEN` 환경변수가 필요합니다. 토큰값은 Passbolt에 등록되어 있습니다.
+
+**macOS / Linux:**
+```bash
+echo 'export GITLAB_FP_PROJECT_TOKEN=토큰값' >> ~/.zshrc
+source ~/.zshrc
+```
+
+**Windows (PowerShell):**
+```powershell
+[System.Environment]::SetEnvironmentVariable('GITLAB_FP_PROJECT_TOKEN', '토큰값', 'User')
+```
 
 ```bash
-npm version patch && npm run publish:gitlab
+npm version patch && npm run publish:gitlab   # 0.1.3 → 0.1.4 (버그 수정)
+npm version minor && npm run publish:gitlab   # 0.1.4 → 0.2.0 (기능 추가)
+npm version major && npm run publish:gitlab   # 0.2.0 → 1.0.0 (Breaking Change)
 ```
 
-## 프로젝트 구조
+## 룰 파일 출처
 
-```
-src/
-├── cli.ts                      # 진입점
-├── constants.ts                # 상수 + 매핑
-├── prompts/                    # 인터랙티브 프롬프트
-│   ├── common.ts               # 공통 (이름, 에이전트, 이슈 트래커, 레포)
-│   ├── frontend.ts             # FE 세부 옵션
-│   ├── backend.ts              # BE 세부 옵션
-│   ├── blockchain.ts           # 블록체인 옵션
-│   ├── mobile.ts               # 모바일 옵션
-│   └── types.ts                # 타입 정의
-├── scaffolder/                 # 스캐폴더 (순서대로)
-│   ├── index.ts                # 오케스트레이터
-│   ├── project.ts              # Step 1. 프로젝트 생성
-│   ├── agent-rules.ts          # Step 2. 에이전트 룰 + 스킬 + 워크플로우
-│   ├── graphify.ts             # Graphify 세팅
-│   └── utils.ts                # 공통 헬퍼
-├── generators/                 # 생성기
-│   ├── commands.ts             # CLI 커맨드 매핑
-│   ├── manual.ts               # 수동 생성 라우터
-│   ├── monorepo.ts             # 모노레포 공유 패키지
-│   ├── docker.ts               # Docker 생성
-│   ├── readme.ts               # README 생성
-│   ├── env.ts                  # .env.example 생성
-│   ├── post-process.ts         # 아키텍처/테스트/라이브러리 후처리
-│   └── stacks/                 # 스택별 보일러플레이트
-│       ├── node.ts
-│       ├── go.ts
-│       ├── java.ts
-│       ├── python.ts
-│       ├── rust.ts
-│       ├── kotlin.ts
-│       ├── dotnet.ts
-│       ├── angular.ts
-│       ├── frontend.ts
-│       └── blockchain.ts
-templates/
-├── agents/                     # 에이전트별 기본 템플릿 (7개)
-├── rules/
-│   ├── core/                   # 공통 룰 (5개)
-│   └── stack/                  # 스택별 룰 (19개 폴더)
-└── skills/                     # SKILL.md 오픈 스탠다드
-    ├── common/                 # 공통 스킬 (4개)
-    ├── frontend/               # FE 스킬 (4개)
-    ├── backend/                # BE 스킬 (3개)
-    ├── blockchain/             # 블록체인 스킬 (1개)
-    └── workflow/               # 워크플로우 스킬 (3개)
-```
+| 스택 | 출처 |
+|------|------|
+| Solidity | [SWC Registry](https://swcregistry.io/) |
+| Solana | [Sealevel Attacks](https://github.com/coral-xyz/sealevel-attacks) |
+| Move | [Hacken Audit Checklist](https://hacken.io/discover/move-smart-contract-audit-checklist/) |
+| React | [React Docs](https://react.dev/) |
+| Agent Rules | [awesome-cursorrules](https://github.com/PatrickJS/awesome-cursorrules), [block/ai-rules](https://github.com/block/ai-rules) |
