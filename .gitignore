@@ -3,7 +3,5 @@ dist
 .test-output
 .test-docker
 .claude/settings.local.json
-.harness/errors.log
-.harness/harness.log
-.harness/learnings.json
+.harness/
 .test-hooks

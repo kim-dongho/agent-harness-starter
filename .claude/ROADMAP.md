@@ -85,9 +85,9 @@
 - [x] Coupling 메트릭 추출 (dependency-cruiser에 포함)
 - [x] Mutation Testing (Stryker) — 설정 파일 + devDependency 자동 생성 (JS/TS 스택)
 
-### 3-5. Progressive Context Loading
-- [ ] 단계별 필요한 규칙만 로드 (토큰 60-95% 절약)
-- [ ] Trellis 패턴 — monolithic CLAUDE.md → 점진적 스펙 로딩
+### 3-5. Progressive Context Loading ✅
+- [x] 단계별 필요한 규칙만 로드 (토큰 60-95% 절약)
+- [x] Trellis 패턴 — getStackRuleDirs()로 config 스택만 필터하여 점진적 로드
 
 ### 3-6. Skills 최적화 ✅
 - [x] 21개 → 10개 정리 (중복/stack rules 이관)
