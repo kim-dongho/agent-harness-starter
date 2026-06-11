@@ -14,6 +14,8 @@
 # ──────────────────────────────────────────────────────────────
 set -euo pipefail
 
+_metric() { mkdir -p "$CLAUDE_PROJECT_DIR/.harness"; printf '{"ts":"%s","hook":"post-write","event":"%s","file":"%s","codes":%s}\n' "$(TZ=Asia/Seoul date +%Y-%m-%dT%H:%M:%S+09:00)" "$1" "$2" "${3:-[]}" >> "$CLAUDE_PROJECT_DIR/.harness/metrics.jsonl"; }
+
 INPUT=$(cat)
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
 
@@ -145,11 +147,54 @@ case "$REL_PATH" in
     ;;
 esac
 
+# 메트릭 기록
+if [ -n "$CONTEXT" ]; then
+  # 에러 감지
+  ERROR_CODES=$(printf '%s' "$CONTEXT" | grep -oE 'TS[0-9]+|SWC-[0-9]+|unwrap|assert!' | sort -u | jq -Rsc 'split("\n") | map(select(. != ""))') || ERROR_CODES='[]'
+  _metric "error" "$REL_PATH" "$ERROR_CODES"
+else
+  _metric "clean" "$REL_PATH"
+fi
+
 # 결과 출력 — JSON으로 사용자 + 에이전트 양쪽에 전달
 if [ -n "$CONTEXT" ]; then
-  # errors.log에 기록 — learnings-recorder가 Stop 시점에 읽어서 학습 규칙으로 변환
   HARNESS_DIR="$CLAUDE_PROJECT_DIR/.harness"
   mkdir -p "$HARNESS_DIR"
+
+  # 즉시 학습 — 에러 코드를 learnings.json에 바로 기록
+  LEARNINGS_FILE="$HARNESS_DIR/learnings.json"
+  if [ ! -f "$LEARNINGS_FILE" ]; then echo '{"learnings":[]}' > "$LEARNINGS_FILE"; fi
+  _error_to_rule() {
+    local e="$1" f="$2"
+    case "$e" in
+      *TS2322*) echo "타입 불일치 — 변수/반환값의 타입과 실제 값이 일치하는지 확인한다 ($f)" ;;
+      *TS2345*) echo "인자 타입 불일치 — 함수 호출 시 인자 타입을 확인한다 ($f)" ;;
+      *TS2339*) echo "존재하지 않는 속성 — 객체의 속성명과 타입 정의를 확인한다 ($f)" ;;
+      *TS2304*) echo "미선언 식별자 — import 누락 또는 오타를 확인한다 ($f)" ;;
+      *TS7006*) echo "암시적 any — 파라미터에 타입을 명시한다 ($f)" ;;
+      *TS2532*) echo "null/undefined 가능성 — optional chaining 또는 null 체크를 추가한다 ($f)" ;;
+      *TS6133*) echo "미사용 변수 — 선언하고 사용하지 않는 변수를 제거한다 ($f)" ;;
+      *SWC-115*) echo "tx.origin 사용 금지 — msg.sender를 사용한다 ($f)" ;;
+      *SWC-106*) echo "selfdestruct 접근 제어 — 권한 검증 추가 ($f)" ;;
+      *SWC-112*) echo "delegatecall 위험 — 신뢰할 수 있는 대상인지 확인 ($f)" ;;
+      *SWC-103*) echo "floating pragma — 버전을 고정한다 ($f)" ;;
+      *unwrap*) echo "unwrap() 금지 — 프로덕션 코드에서는 ? 연산자 사용 ($f)" ;;
+      *) echo "빌드/린트 에러 발생 — 수정 후 검증한다 ($f)" ;;
+    esac
+  }
+  for CODE in $(printf '%s' "$CONTEXT" | grep -oE 'TS[0-9]+|SWC-[0-9]+|unwrap|assert!' | sort -u); do
+    RULE=$(_error_to_rule "$CODE" "$REL_PATH")
+    DUP=$(jq --arg r "$RULE" '.learnings[] | select(.rule == $r) | .id' "$LEARNINGS_FILE" 2>/dev/null || true)
+    if [ -n "$DUP" ]; then continue; fi
+    NEW_ID="learn-$(date +%s)-$RANDOM"
+    DATE=$(TZ=Asia/Seoul date +%Y-%m-%d)
+    TMPFILE=$(mktemp "$LEARNINGS_FILE.XXXXXX")
+    jq --arg id "$NEW_ID" --arg date "$DATE" --arg mistake "$CODE" --arg rule "$RULE" \
+      '.learnings += [{"id":$id,"date":$date,"mistake":$mistake,"rule":$rule}] | .learnings = .learnings[-20:]' \
+      "$LEARNINGS_FILE" > "$TMPFILE" && mv "$TMPFILE" "$LEARNINGS_FILE"
+  done
+
+  # errors.log에도 기록 (Stop hook 호환)
   printf "%b\n" "$CONTEXT" >> "$HARNESS_DIR/errors.log"
   # errors.log 최대 100줄 유지
   if [ -f "$HARNESS_DIR/errors.log" ] && [ "$(wc -l < "$HARNESS_DIR/errors.log")" -gt 100 ]; then

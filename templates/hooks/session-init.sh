@@ -27,6 +27,28 @@ echo ""
 SCOPES=$(jq -r '.agent.allowedScopes[]' "$CONFIG" 2>/dev/null | tr '\n' ', ' | sed 's/,$//')
 echo "Allowed scopes: $SCOPES"
 
+# 메트릭 요약 (최근 7일) — WEEK_AGO 이후 라인만 필터
+METRICS_FILE="$CLAUDE_PROJECT_DIR/.harness/metrics.jsonl"
+if [ -f "$METRICS_FILE" ] && [ -s "$METRICS_FILE" ]; then
+  WEEK_AGO=$(date -v-7d +%Y-%m-%d 2>/dev/null || date -d '7 days ago' +%Y-%m-%d 2>/dev/null || echo "")
+  if [ -n "$WEEK_AGO" ]; then
+    # ts가 WEEK_AGO 이후인 라인만 추출
+    RECENT=$(awk -v cutoff="$WEEK_AGO" -F'"ts":"' '{split($2,a,"\""); if(a[1]>=cutoff) print}' "$METRICS_FILE")
+    if [ -n "$RECENT" ]; then
+      BLOCKS=$(printf '%s' "$RECENT" | grep -c '"event":"block"' 2>/dev/null || true)
+      ERRORS=$(printf '%s' "$RECENT" | grep -c '"event":"error"' 2>/dev/null || true)
+      CLEANS=$(printf '%s' "$RECENT" | grep -c '"event":"clean"' 2>/dev/null || true)
+      BLOCKS=${BLOCKS:-0}; ERRORS=${ERRORS:-0}; CLEANS=${CLEANS:-0}
+      TOTAL=$((ERRORS + CLEANS))
+      if [ "$TOTAL" -gt 0 ]; then
+        FP_PCT=$((CLEANS * 100 / TOTAL))
+        echo ""
+        echo "📊 차단: ${BLOCKS}회 | first-pass: ${FP_PCT}% | 에러감지: ${ERRORS}회 (최근 7일)"
+      fi
+    fi
+  fi
+fi
+
 # Forbidden imports
 IMPORTS=$(jq -r '.architecture.forbiddenImports | to_entries[] | "  \(.key) → cannot import from \(.value | join(", "))"' "$CONFIG" 2>/dev/null)
 if [ -n "$IMPORTS" ]; then

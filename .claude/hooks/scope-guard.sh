@@ -16,6 +16,8 @@
 # ──────────────────────────────────────────────────────────────
 set -euo pipefail
 
+_metric() { mkdir -p "$CLAUDE_PROJECT_DIR/.harness"; printf '{"ts":"%s","hook":"scope-guard","event":"%s","file":"%s"}\n' "$(TZ=Asia/Seoul date +%Y-%m-%dT%H:%M:%S+09:00)" "$1" "$2" >> "$CLAUDE_PROJECT_DIR/.harness/metrics.jsonl"; }
+
 # 로그 + 화면 출력 함수
 _notify() {
   local msg="$1"
@@ -50,6 +52,7 @@ fi
 # path traversal 방어 — .. 포함 경로는 무조건 차단
 if [[ "$REL_PATH" == *".."* ]]; then
   _notify "BLOCK path traversal: $REL_PATH"
+  _metric "block" "$REL_PATH"
   echo "harness: path traversal detected in '$REL_PATH'" >&2
   exit 2
 fi
@@ -92,5 +95,6 @@ set +f
 # 어떤 scope에도 매칭 안 됨 → 차단
 SCOPES=$(jq -r '(.agent.allowedScopes // ["src/**/*","tests/**/*"]) | join(", ")' "$CONFIG" 2>/dev/null || echo "src/**/*")
 _notify "BLOCK (outside scope): $REL_PATH"
+_metric "block" "$REL_PATH"
 echo "harness: '$REL_PATH' is outside allowed scopes ($SCOPES)" >&2
 exit 2

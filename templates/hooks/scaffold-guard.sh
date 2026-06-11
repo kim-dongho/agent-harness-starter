@@ -3,6 +3,7 @@
 set -euo pipefail
 
 _log() { mkdir -p "$CLAUDE_PROJECT_DIR/.harness"; printf "[%s] scaffold-guard: %s\n" "$(date -u +%H:%M:%S)" "$1" >> "$CLAUDE_PROJECT_DIR/.harness/harness.log"; }
+_metric() { mkdir -p "$CLAUDE_PROJECT_DIR/.harness"; printf '{"ts":"%s","hook":"scaffold-guard","event":"%s","file":"%s"}\n' "$(TZ=Asia/Seoul date +%Y-%m-%dT%H:%M:%S+09:00)" "$1" "$2" >> "$CLAUDE_PROJECT_DIR/.harness/metrics.jsonl"; }
 
 INPUT=$(cat)
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty')
@@ -68,6 +69,7 @@ fi
 if [ -n "$SUGGESTION" ]; then
   FILENAME=$(basename "$REL_PATH" | sed 's/\.[^.]*$//')
   _log "BLOCK (scaffold): $REL_PATH → /generate $SUGGESTION $FILENAME"
+  _metric "block" "$REL_PATH"
   echo "harness: Instead of creating '$REL_PATH' manually, use the scaffolder:" >&2
   echo "  /generate $SUGGESTION $FILENAME" >&2
   echo "This ensures correct directory structure, naming conventions, and barrel exports." >&2
