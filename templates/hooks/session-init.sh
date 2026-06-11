@@ -10,8 +10,8 @@ if [ ! -f "$CONFIG" ]; then
   exit 0
 fi
 
-OUT=""
-OUT="${OUT}=== Agent Harness Active ===\n\n"
+echo "=== Agent Harness Active ==="
+echo ""
 
 # Project summary
 FRAMEWORK=$(jq -r '.project.framework' "$CONFIG")
@@ -20,13 +20,14 @@ ARCH=$(jq -r '.architecture.style' "$CONFIG")
 RUNNER=$(jq -r '.testing.runner' "$CONFIG")
 PERSONA=$(jq -r '.agent.persona' "$CONFIG")
 
-OUT="${OUT}Project: $(jq -r '.project.name' "$CONFIG")\n"
-OUT="${OUT}Stack: $FRAMEWORK / $LANGUAGE / $ARCH\n"
-OUT="${OUT}Test runner: $RUNNER | Persona: $PERSONA\n\n"
+echo "Project: $(jq -r '.project.name' "$CONFIG")"
+echo "Stack: $FRAMEWORK / $LANGUAGE / $ARCH"
+echo "Test runner: $RUNNER | Persona: $PERSONA"
+echo ""
 
 # Allowed scopes
 SCOPES=$(jq -r '.agent.allowedScopes[]' "$CONFIG" 2>/dev/null | tr '\n' ', ' | sed 's/,$//')
-OUT="${OUT}Allowed scopes: $SCOPES\n"
+echo "Allowed scopes: $SCOPES"
 
 # 메트릭 요약 (최근 7일) — WEEK_AGO 이후 라인만 필터
 METRICS_FILE="$PROJECT_DIR/.harness/metrics.jsonl"
@@ -42,7 +43,8 @@ if [ -f "$METRICS_FILE" ] && [ -s "$METRICS_FILE" ]; then
       TOTAL=$((ERRORS + CLEANS))
       if [ "$TOTAL" -gt 0 ]; then
         FP_PCT=$((CLEANS * 100 / TOTAL))
-        OUT="${OUT}\n📊 차단: ${BLOCKS}회 | first-pass: ${FP_PCT}% | 에러감지: ${ERRORS}회 (최근 7일)\n"
+        echo ""
+        echo "📊 차단: ${BLOCKS}회 | first-pass: ${FP_PCT}% | 에러감지: ${ERRORS}회 (최근 7일)"
       fi
     fi
   fi
@@ -51,7 +53,9 @@ fi
 # Forbidden imports
 IMPORTS=$(jq -r '.architecture.forbiddenImports | to_entries[] | "  \(.key) → cannot import from \(.value | join(", "))"' "$CONFIG" 2>/dev/null)
 if [ -n "$IMPORTS" ]; then
-  OUT="${OUT}\nImport restrictions:\n${IMPORTS}\n"
+  echo ""
+  echo "Import restrictions:"
+  echo "$IMPORTS"
 fi
 
 # Domain glossary
@@ -59,17 +63,20 @@ GLOSSARY="$PROJECT_DIR/domain-glossary.json"
 if [ -f "$GLOSSARY" ]; then
   TERM_COUNT=$(jq '.terms | length' "$GLOSSARY")
   TERMS=$(jq -r '.terms | keys[]' "$GLOSSARY" | tr '\n' ', ' | sed 's/,$//')
-  OUT="${OUT}\nDomain glossary ($TERM_COUNT terms): $TERMS\n"
+  echo ""
+  echo "Domain glossary ($TERM_COUNT terms): $TERMS"
 fi
 
 # SDLC Pipeline status
-OUT="${OUT}\n=== SDLC Pipeline ===\n"
-OUT="${OUT}1. /plan    → 기능, 우선순위, 마일스톤\n"
-OUT="${OUT}2. /analyze → 도메인 용어집 + 기능 스펙\n"
-OUT="${OUT}3. /design  → 인터페이스, API 계약, 컴포넌트 구조\n"
-OUT="${OUT}4. /generate <type> <name> → 파일 생성 (직접 Write 금지)\n"
-OUT="${OUT}5. /start <이슈번호> → 이슈 기반 작업 시작\n"
-OUT="${OUT}6. /done    → 품질 게이트 + 커밋 + MR\n"
+echo ""
+echo "=== SDLC Pipeline ==="
+echo "1. /plan    → 기능, 우선순위, 마일스톤"
+echo "2. /analyze → 도메인 용어집 + 기능 스펙"
+echo "3. /design  → 인터페이스, API 계약, 컴포넌트 구조"
+echo "4. /generate <type> <name> → 파일 생성 (직접 Write 금지)"
+echo "5. /start <이슈번호> → 이슈 기반 작업 시작"
+echo "6. /done    → 품질 게이트 + 커밋 + MR"
+echo ""
 
 PLAN="no"; GLOSSARY_EXISTS="no"; DESIGN="no"
 [ -f "$PROJECT_DIR/docs/plan.json" ] && PLAN="yes"
@@ -78,12 +85,12 @@ PLAN="no"; GLOSSARY_EXISTS="no"; DESIGN="no"
 
 # Learnings
 LEARNINGS="$PROJECT_DIR/.harness/learnings.json"
-AUTOHARNESS_MSG=""
 if [ -f "$LEARNINGS" ]; then
   LEARN_COUNT=$(jq '.learnings | length' "$LEARNINGS" 2>/dev/null || echo 0)
   if [ "$LEARN_COUNT" -gt 0 ]; then
-    OUT="${OUT}\n=== Learnings ($LEARN_COUNT) ===\n"
-    OUT="${OUT}$(jq -r '.learnings[-5:][] | "⚠️ \(.rule)"' "$LEARNINGS" 2>/dev/null)\n"
+    echo ""
+    echo "=== Learnings ($LEARN_COUNT) ==="
+    jq -r '.learnings[-5:][] | "⚠️ \(.rule)"' "$LEARNINGS" 2>/dev/null
   fi
 
   # AutoHarness — 반복 에러 패턴 감지 → 규칙 추가 제안
@@ -118,34 +125,27 @@ if [ -f "$LEARNINGS" ]; then
     done <<< "$FREQ"
 
     if [ -n "$SUGGESTIONS" ]; then
-      OUT="${OUT}\n=== AutoHarness ===$(printf '%b' "$SUGGESTIONS")\n"
-      AUTOHARNESS_MSG="→ 위 규칙을 codingStandards에 추가하시겠습니까?"
+      echo ""
+      echo "=== AutoHarness ==="
+      printf '%b\n' "$SUGGESTIONS"
+      echo ""
+      echo "→ 위 규칙을 codingStandards에 추가하시겠습니까?"
     fi
   fi
 fi
 
-OUT="${OUT}\nStatus: Plan=$PLAN | Glossary=$GLOSSARY_EXISTS | Design=$DESIGN\n"
+echo ""
+echo "Status: Plan=$PLAN | Glossary=$GLOSSARY_EXISTS | Design=$DESIGN"
 
 if [ "$PLAN" = "no" ]; then
-  OUT="${OUT}→ Next: /plan\n"
+  echo "→ Next: /plan"
 elif [ "$GLOSSARY_EXISTS" = "no" ]; then
-  OUT="${OUT}→ Next: /analyze\n"
+  echo "→ Next: /analyze"
 elif [ "$DESIGN" = "no" ]; then
-  OUT="${OUT}→ Next: /design\n"
+  echo "→ Next: /design"
 else
-  OUT="${OUT}→ Ready: /generate 또는 /start 로 구현 시작\n"
+  echo "→ Ready: /generate 또는 /start 로 구현 시작"
 fi
 
-# JSON 출력 — systemMessage(사용자 화면) + additionalContext(에이전트 컨텍스트)
-USER_MSG=$(printf '%b' "$OUT")
-AGENT_MSG="${USER_MSG}"
-if [ -n "$AUTOHARNESS_MSG" ]; then
-  AGENT_MSG="${AGENT_MSG}\n\n${AUTOHARNESS_MSG}"
-fi
-
-jq -n \
-  --arg sm "$USER_MSG" \
-  --arg ac "$AGENT_MSG" \
-  '{ "systemMessage": $sm, "additionalContext": $ac }'
-
+echo ""
 exit 0
