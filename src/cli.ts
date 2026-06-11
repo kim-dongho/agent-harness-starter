@@ -11,6 +11,7 @@ import { Command } from 'commander';
 import { runPrompts } from './prompts/index.js';
 import { scaffold } from './scaffolder/index.js';
 import { initHarness } from './commands/init.js';
+import { showMetrics } from './commands/metrics.js';
 
 const program = new Command();
 
@@ -40,6 +41,18 @@ program
   .argument('[project-dir]', '프로젝트 디렉토리 (기본: 현재 디렉토리)')
   .action(async (projectDir?: string) => {
     await initHarness(projectDir);
+    process.exit(0);
+  });
+
+// metrics 명령어: 메트릭 확인
+program
+  .command('metrics')
+  .description('하네스 메트릭을 집계하여 출력한다')
+  .argument('[project-dir]', '프로젝트 디렉토리 (기본: 현재 디렉토리)')
+  .option('-d, --days <days>', '집계 기간 (일)', '7')
+  .action(async (projectDir?: string, opts?: { days?: string }) => {
+    const days = Number(opts?.days ?? 7);
+    await showMetrics(projectDir, isNaN(days) || days <= 0 ? 7 : days);
     process.exit(0);
   });
 
