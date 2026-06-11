@@ -1,13 +1,13 @@
 {
   "project": {
-    "name": "agent-harness-starter",
+    "name": "@frontend-playground/agent-harness-starter",
     "framework": "unknown",
     "packageManager": "npm",
     "language": "typescript"
   },
   "architecture": {
     "style": "modular",
-    "enforceIndexGen": false,
+    "enforceIndexGen": true,
     "forbiddenImports": {}
   },
   "development": {
@@ -29,12 +29,11 @@
     "persona": "senior-developer",
     "allowedScopes": [
       "src/**/*",
-      "tests/**/*",
-      "templates/**/*",
-      "scripts/**/*",
-      ".claude/**/*"
+      "tests/**/*"
     ],
-    "adapters": ["claude"]
+    "adapters": [
+      "gemini"
+    ]
   },
   "rules": {
     "fileNaming": {
@@ -46,9 +45,21 @@
       "testSuffix": ".test"
     },
     "codingStandards": [
-      { "id": "no-hardcoded-secrets", "description": "시크릿/크리덴셜을 코드에 하드코딩하지 않는다", "severity": "error" },
-      { "id": "no-console-log", "description": "console.log를 디버깅 용도로 남기지 않는다", "severity": "error" },
-      { "id": "no-commented-code", "description": "주석 처리된 코드 블록을 커밋하지 않는다", "severity": "error" }
+      {
+        "id": "no-hardcoded-secrets",
+        "description": "시크릿/크리덴셜을 코드에 하드코딩하지 않는다",
+        "severity": "error"
+      },
+      {
+        "id": "no-console-log",
+        "description": "console.log를 디버깅 용도로 남기지 않는다",
+        "severity": "error"
+      },
+      {
+        "id": "no-commented-code",
+        "description": "주석 처리된 코드 블록을 커밋하지 않는다",
+        "severity": "error"
+      }
     ]
   }
 }

@@ -3,5 +3,7 @@ dist
 .test-output
 .test-docker
 .claude/settings.local.json
+.gemini/
 .harness/
 .test-hooks
+GEMINI.md
