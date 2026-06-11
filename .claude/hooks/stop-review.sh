@@ -103,7 +103,7 @@ fi
 #    learnings-recorder.sh가 이 파일을 읽어서 learnings.json에 규칙으로 변환
 if [ "$HAS_ERRORS" = true ]; then
   mkdir -p "$CLAUDE_PROJECT_DIR/.harness"
-  printf -- "--- %s ---\n%b\n\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$CONTEXT" >> "$CLAUDE_PROJECT_DIR/.harness/errors.log"
+  printf -- "--- %s ---\n%b\n\n" "$(TZ=Asia/Seoul date +%Y-%m-%dT%H:%M:%S+09:00)" "$CONTEXT" >> "$CLAUDE_PROJECT_DIR/.harness/errors.log"
 fi
 
 # 결과 출력
