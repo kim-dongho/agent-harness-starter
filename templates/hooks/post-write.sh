@@ -95,7 +95,7 @@ case "$REL_PATH" in
     fi
     # tx.origin 사용
     if printf '%s' "$CONTENT" | grep -q 'tx\.origin'; then
-      SEC="$SEC\n  - 🚫 tx.origin 사용 감지 — msg.sender를 사용하라 (SWC-115)"
+      SEC="$SEC\n  - 🚫 tx.origin 사용 감지 — msg.sender 사용을 권장합니다 (SWC-115)"
     fi
     # selfdestruct 사용
     if printf '%s' "$CONTENT" | grep -q 'selfdestruct'; then
@@ -107,7 +107,7 @@ case "$REL_PATH" in
     fi
     # floating pragma
     if printf '%s' "$CONTENT" | grep -qE 'pragma solidity \^'; then
-      SEC="$SEC\n  - ⚠️ floating pragma 감지 — 버전을 고정하라 (SWC-103)"
+      SEC="$SEC\n  - ⚠️ floating pragma 감지 — 버전 고정을 권장합니다 (SWC-103)"
     fi
     if [ -n "$SEC" ]; then
       CONTEXT="$CONTEXT\n🔒 Solidity 보안 체크 ($REL_PATH):$SEC"
@@ -202,6 +202,33 @@ if [ -n "$CONTEXT" ]; then
       "$LEARNINGS_FILE" > "$TMPFILE" && mv "$TMPFILE" "$LEARNINGS_FILE"
   done
 
+  # AutoHarness — 반복 에러 감지 → config 규칙 추가 제안
+  _code_to_config_rule() {
+    case "$1" in
+      TS2322) echo '{"id":"strict-return-type","description":"함수 반환 타입을 반드시 명시한다","severity":"warning"}' ;;
+      TS7006) echo '{"id":"no-implicit-any","description":"파라미터에 타입을 반드시 명시한다","severity":"warning"}' ;;
+      TS2345) echo '{"id":"strict-arg-type","description":"함수 호출 시 인자 타입을 확인한다","severity":"warning"}' ;;
+      TS2339) echo '{"id":"strict-property-access","description":"존재하지 않는 속성 접근을 금지한다","severity":"warning"}' ;;
+      TS2532) echo '{"id":"strict-null-check","description":"null/undefined 가능성을 반드시 처리한다","severity":"warning"}' ;;
+      TS6133) echo '{"id":"no-unused-vars","description":"미사용 변수를 선언하지 않는다","severity":"warning"}' ;;
+      SWC-115) echo '{"id":"no-tx-origin","description":"tx.origin 대신 msg.sender를 사용한다","severity":"error"}' ;;
+      SWC-103) echo '{"id":"fixed-pragma","description":"Solidity pragma 버전을 고정한다","severity":"error"}' ;;
+      *) echo "" ;;
+    esac
+  }
+  AUTOHARNESS_MSG=""
+  EXISTING_RULES=$(jq -r '.rules.codingStandards[]?.id // empty' "$CONFIG" 2>/dev/null)
+  for CODE in $(printf '%s' "$CONTEXT" | grep -oE 'TS[0-9]+|SWC-[0-9]+' | sort -u); do
+    CODE_COUNT=$(jq --arg c "$CODE" '[.learnings[] | select(.mistake == $c)] | length' "$LEARNINGS_FILE" 2>/dev/null || echo 0)
+    if [ "$CODE_COUNT" -ge 3 ]; then
+      RULE_JSON=$(_code_to_config_rule "$CODE")
+      [ -z "$RULE_JSON" ] && continue
+      RULE_ID=$(echo "$RULE_JSON" | jq -r '.id')
+      if echo "$EXISTING_RULES" | grep -q "$RULE_ID" 2>/dev/null; then continue; fi
+      AUTOHARNESS_MSG="${AUTOHARNESS_MSG}\n\n💡 [AutoHarness] ${CODE}가 ${CODE_COUNT}회 반복됐습니다. codingStandards에 추가를 제안합니다:\n  ${RULE_JSON}\n추가할까요?"
+    fi
+  done
+
   # errors.log에도 기록 (Stop hook 호환)
   printf "%b\n" "$CONTEXT" >> "$HARNESS_DIR/errors.log"
   # errors.log 최대 100줄 유지
@@ -212,7 +239,7 @@ if [ -n "$CONTEXT" ]; then
   # 사용자에게 보여줄 메시지
   USER_MSG=$(printf "🔧 post-write: 이슈 발견 — %s\n%b" "$REL_PATH" "$CONTEXT")
   # 에이전트에게 전달할 지시
-  AGENT_MSG=$(printf "%b\n\n───────────────────────────────────\n🤖 [자동 검증] 위 이슈에 대해 다음을 수행하라:\n1. 각 이슈의 원인을 한 줄로 설명\n2. 수정 계획을 제시\n3. 사용자에게 \"수정할까요?\" 컨펌을 받은 후 수정\n절대 설명 없이 바로 수정하지 마라." "$CONTEXT")
+  AGENT_MSG=$(printf "%b\n\n───────────────────────────────────\n🤖 [자동 검증] 위 이슈에 대해 다음을 수행하라:\n1. 각 이슈의 원인을 한 줄로 설명\n2. 수정 계획을 제시\n3. 사용자에게 \"수정할까요?\" 컨펌을 받은 후 수정\n절대 설명 없이 바로 수정하지 마라.%b" "$CONTEXT" "$AUTOHARNESS_MSG")
 
   # JSON 출력 — systemMessage(사용자 화면) + additionalContext(에이전트 컨텍스트)
   jq -n \

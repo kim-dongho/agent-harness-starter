@@ -93,6 +93,50 @@ if [ -f "$LEARNINGS" ]; then
     echo "=== Learnings ($LEARN_COUNT) ==="
     jq -r '.learnings[-5:][] | "⚠️ \(.rule)"' "$LEARNINGS" 2>/dev/null
   fi
+
+  # AutoHarness — 반복 에러 패턴 감지 → 규칙 추가 제안
+  # mistake 필드에서 에러 코드별 빈도를 집계, 3회 이상이면 제안
+  if [ "$LEARN_COUNT" -ge 3 ]; then
+    EXISTING_RULES=$(jq -r '.rules.codingStandards[]?.id // empty' "$CONFIG" 2>/dev/null)
+    SUGGESTIONS=""
+
+    # 에러 코드별 빈도 집계
+    FREQ=$(jq -r '.learnings[].mistake' "$LEARNINGS" 2>/dev/null | sort | uniq -c | sort -rn)
+
+    while IFS= read -r line; do
+      COUNT=$(echo "$line" | awk '{print $1}')
+      CODE=$(echo "$line" | awk '{$1=""; print $0}' | sed 's/^ //')
+      [ -z "$CODE" ] && continue
+      [ "$COUNT" -lt 3 ] && continue
+
+      # 에러 코드 → 제안 규칙 매핑
+      RULE_ID=""; RULE_DESC=""
+      case "$CODE" in
+        TS2322) RULE_ID="strict-return-type"; RULE_DESC="함수 반환 타입을 반드시 명시한다" ;;
+        TS7006) RULE_ID="no-implicit-any"; RULE_DESC="파라미터에 타입을 반드시 명시한다" ;;
+        TS2345) RULE_ID="strict-arg-type"; RULE_DESC="함수 호출 시 인자 타입을 확인한다" ;;
+        TS2339) RULE_ID="strict-property-access"; RULE_DESC="존재하지 않는 속성 접근을 금지한다" ;;
+        TS2532) RULE_ID="strict-null-check"; RULE_DESC="null/undefined 가능성을 반드시 처리한다" ;;
+        TS6133) RULE_ID="no-unused-vars"; RULE_DESC="미사용 변수를 선언하지 않는다" ;;
+        SWC-115) RULE_ID="no-tx-origin"; RULE_DESC="tx.origin 대신 msg.sender를 사용한다" ;;
+        SWC-103) RULE_ID="fixed-pragma"; RULE_DESC="Solidity pragma 버전을 고정한다" ;;
+        *) continue ;;
+      esac
+
+      # 이미 있는 규칙이면 스킵
+      if echo "$EXISTING_RULES" | grep -q "$RULE_ID" 2>/dev/null; then continue; fi
+
+      SUGGESTIONS="${SUGGESTIONS}\n  💡 ${CODE} (${COUNT}회) → +\"${RULE_ID}\" (${RULE_DESC})"
+    done <<< "$FREQ"
+
+    if [ -n "$SUGGESTIONS" ]; then
+      echo ""
+      echo "=== AutoHarness ==="
+      printf '%b\n' "$SUGGESTIONS"
+      echo ""
+      echo "→ 위 규칙을 codingStandards에 추가하시겠습니까?"
+    fi
+  fi
 fi
 
 echo ""

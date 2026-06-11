@@ -61,8 +61,9 @@ while IFS= read -r line; do
     *"❌"*|*"⚠️"*|*"error TS"*|*"error"*|*"FAIL"*|*"no-"*|*"prefer-"*) ;;
     *) continue ;;
   esac
-  # 구분선/빈 줄 스킵
+  # 구분선/빈 줄/헤더 줄 스킵
   case "$line" in "---"*|"") continue ;; esac
+  case "$line" in *"Type errors in"*|*"Lint errors in"*|*"Architecture violation in"*|*"보안 체크"*) continue ;; esac
 
   # 파일 경로 추출 (있으면)
   FILE=$(echo "$line" | grep -oE '[a-zA-Z0-9/_.-]+\.(ts|tsx|js|jsx)' | head -1 || echo "")
