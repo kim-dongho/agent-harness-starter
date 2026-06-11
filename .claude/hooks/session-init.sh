@@ -16,8 +16,10 @@
 # 출력: 프로젝트 컨텍스트 텍스트 (에이전트가 세션 내내 참조)
 # ──────────────────────────────────────────────────────────────
 set -euo pipefail
+# 에이전트 환경변수 통합 — Claude/Gemini/Codex/Cursor 호환
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GEMINI_PROJECT_DIR:-${CODEX_PROJECT_DIR:-${CURSOR_PROJECT_DIR:-$PWD}}}}"
 
-CONFIG="$CLAUDE_PROJECT_DIR/harness.config.json"
+CONFIG="$PROJECT_DIR/harness.config.json"
 
 if [ ! -f "$CONFIG" ]; then
   exit 0
@@ -51,7 +53,7 @@ if [ -n "$IMPORTS" ]; then
 fi
 
 # 도메인 용어집
-GLOSSARY="$CLAUDE_PROJECT_DIR/domain-glossary.json"
+GLOSSARY="$PROJECT_DIR/domain-glossary.json"
 if [ -f "$GLOSSARY" ]; then
   TERM_COUNT=$(jq '.terms | length' "$GLOSSARY")
   TERMS=$(jq -r '.terms | keys[]' "$GLOSSARY" | tr '\n' ', ' | sed 's/,$//')
@@ -60,7 +62,7 @@ if [ -f "$GLOSSARY" ]; then
 fi
 
 # 학습된 규칙 (최근 5개)
-LEARNINGS="$CLAUDE_PROJECT_DIR/.harness/learnings.json"
+LEARNINGS="$PROJECT_DIR/.harness/learnings.json"
 if [ -f "$LEARNINGS" ]; then
   LEARN_COUNT=$(jq '.learnings | length' "$LEARNINGS" 2>/dev/null || echo 0)
   if [ "$LEARN_COUNT" -gt 0 ]; then
@@ -83,9 +85,9 @@ echo ""
 
 # 현재 진행 상태 확인 (파일 존재 여부로 판단)
 PLAN="no"; GLOSSARY_EXISTS="no"; DESIGN="no"
-[ -f "$CLAUDE_PROJECT_DIR/docs/plan.json" ] && PLAN="yes"
-[ -f "$CLAUDE_PROJECT_DIR/domain-glossary.json" ] && GLOSSARY_EXISTS="yes"
-[ -d "$CLAUDE_PROJECT_DIR/docs/designs" ] && [ "$(ls -A "$CLAUDE_PROJECT_DIR/docs/designs" 2>/dev/null)" ] && DESIGN="yes"
+[ -f "$PROJECT_DIR/docs/plan.json" ] && PLAN="yes"
+[ -f "$PROJECT_DIR/domain-glossary.json" ] && GLOSSARY_EXISTS="yes"
+[ -d "$PROJECT_DIR/docs/designs" ] && [ "$(ls -A "$PROJECT_DIR/docs/designs" 2>/dev/null)" ] && DESIGN="yes"
 
 echo "Status: Plan=$PLAN | Glossary=$GLOSSARY_EXISTS | Design=$DESIGN"
 

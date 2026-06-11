@@ -15,14 +15,16 @@
 # exit 0: 허용 / exit 2: 차단
 # ──────────────────────────────────────────────────────────────
 set -euo pipefail
+# 에이전트 환경변수 통합 — Claude/Gemini/Codex/Cursor 호환
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GEMINI_PROJECT_DIR:-${CODEX_PROJECT_DIR:-${CURSOR_PROJECT_DIR:-$PWD}}}}"
 
-_metric() { mkdir -p "$CLAUDE_PROJECT_DIR/.harness"; printf '{"ts":"%s","hook":"scope-guard","event":"%s","file":"%s"}\n' "$(TZ=Asia/Seoul date +%Y-%m-%dT%H:%M:%S+09:00)" "$1" "$2" >> "$CLAUDE_PROJECT_DIR/.harness/metrics.jsonl"; }
+_metric() { mkdir -p "$PROJECT_DIR/.harness"; printf '{"ts":"%s","hook":"scope-guard","event":"%s","file":"%s"}\n' "$(TZ=Asia/Seoul date +%Y-%m-%dT%H:%M:%S+09:00)" "$1" "$2" >> "$PROJECT_DIR/.harness/metrics.jsonl"; }
 
 # 로그 + 화면 출력 함수
 _notify() {
   local msg="$1"
-  mkdir -p "$CLAUDE_PROJECT_DIR/.harness"
-  printf "[%s] scope-guard: %s\n" "$(date -u +%H:%M:%S)" "$msg" >> "$CLAUDE_PROJECT_DIR/.harness/harness.log"
+  mkdir -p "$PROJECT_DIR/.harness"
+  printf "[%s] scope-guard: %s\n" "$(date -u +%H:%M:%S)" "$msg" >> "$PROJECT_DIR/.harness/harness.log"
   echo "🔧 scope-guard: $msg"
 }
 
@@ -36,7 +38,7 @@ if [ -z "$FILE_PATH" ]; then
 fi
 
 # harness.config.json이 없으면 스킵 (하네스 미설정 프로젝트)
-CONFIG="$CLAUDE_PROJECT_DIR/harness.config.json"
+CONFIG="$PROJECT_DIR/harness.config.json"
 if [ ! -f "$CONFIG" ]; then
   exit 0
 fi
@@ -44,7 +46,7 @@ fi
 # 절대 경로 → 상대 경로 변환
 # CLAUDE_PROJECT_DIR 끝에 / 가 있을 수 있으므로 %/ 로 정규화
 if [[ "$FILE_PATH" == /* ]]; then
-  REL_PATH="${FILE_PATH#${CLAUDE_PROJECT_DIR%/}/}"
+  REL_PATH="${FILE_PATH#${PROJECT_DIR%/}/}"
 else
   REL_PATH="$FILE_PATH"
 fi

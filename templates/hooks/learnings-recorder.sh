@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # harness: learnings-recorder — errors.log → learnings.json (에러코드 기반 규칙 자동 생성)
 set -euo pipefail
+# 에이전트 환경변수 통합 — Claude/Gemini/Codex/Cursor 호환
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GEMINI_PROJECT_DIR:-${CODEX_PROJECT_DIR:-${CURSOR_PROJECT_DIR:-$PWD}}}}"
 
-HARNESS_DIR="$CLAUDE_PROJECT_DIR/.harness"
+HARNESS_DIR="$PROJECT_DIR/.harness"
 ERRORS_LOG="$HARNESS_DIR/errors.log"
 LEARNINGS="$HARNESS_DIR/learnings.json"
 MAX_LEARNINGS=20

@@ -13,8 +13,10 @@
 # exit 0: 항상 (피드백만 제공)
 # ──────────────────────────────────────────────────────────────
 set -euo pipefail
+# 에이전트 환경변수 통합 — Claude/Gemini/Codex/Cursor 호환
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GEMINI_PROJECT_DIR:-${CODEX_PROJECT_DIR:-${CURSOR_PROJECT_DIR:-$PWD}}}}"
 
-_metric() { mkdir -p "$CLAUDE_PROJECT_DIR/.harness"; printf '{"ts":"%s","hook":"post-write","event":"%s","file":"%s","codes":%s}\n' "$(TZ=Asia/Seoul date +%Y-%m-%dT%H:%M:%S+09:00)" "$1" "$2" "${3:-[]}" >> "$CLAUDE_PROJECT_DIR/.harness/metrics.jsonl"; }
+_metric() { mkdir -p "$PROJECT_DIR/.harness"; printf '{"ts":"%s","hook":"post-write","event":"%s","file":"%s","codes":%s}\n' "$(TZ=Asia/Seoul date +%Y-%m-%dT%H:%M:%S+09:00)" "$1" "$2" "${3:-[]}" >> "$PROJECT_DIR/.harness/metrics.jsonl"; }
 
 INPUT=$(cat)
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
@@ -23,21 +25,21 @@ if [ -z "$FILE_PATH" ]; then
   exit 0
 fi
 
-CONFIG="$CLAUDE_PROJECT_DIR/harness.config.json"
+CONFIG="$PROJECT_DIR/harness.config.json"
 if [ ! -f "$CONFIG" ]; then
   exit 0
 fi
 
 # 상대 경로 변환 + path traversal 방어
 if [[ "$FILE_PATH" == /* ]]; then
-  REL_PATH="${FILE_PATH#${CLAUDE_PROJECT_DIR%/}/}"
+  REL_PATH="${FILE_PATH#${PROJECT_DIR%/}/}"
 else
   REL_PATH="$FILE_PATH"
 fi
 if [[ "$REL_PATH" == *".."* ]]; then exit 0; fi
 # $FILE_PATH가 프로젝트 디렉토리 내부인지 검증
 case "$FILE_PATH" in
-  "${CLAUDE_PROJECT_DIR}"/*) ;; # OK
+  "${PROJECT_DIR}"/*) ;; # OK
   *) exit 0 ;; # 프로젝트 외부 경로 — 무시
 esac
 
@@ -66,8 +68,8 @@ if [ "$LANGUAGE" = "typescript" ]; then
 fi
 
 # 3. Import 위반 검사
-if [ -f "$CLAUDE_PROJECT_DIR/.dependency-cruiser.cjs" ] && command -v npx &>/dev/null; then
-  DEP_RESULT=$(npx depcruise --config "$CLAUDE_PROJECT_DIR/.dependency-cruiser.cjs" "$FILE_PATH" 2>&1) || true
+if [ -f "$PROJECT_DIR/.dependency-cruiser.cjs" ] && command -v npx &>/dev/null; then
+  DEP_RESULT=$(npx depcruise --config "$PROJECT_DIR/.dependency-cruiser.cjs" "$FILE_PATH" 2>&1) || true
   if echo "$DEP_RESULT" | grep -q "error"; then
     DEP_ERRORS=$(echo "$DEP_RESULT" | grep "error" | head -3)
     CONTEXT="$CONTEXT\n⚠️ Architecture violation in $REL_PATH:\n$DEP_ERRORS"
@@ -162,7 +164,7 @@ fi
 
 # 결과 출력 — JSON으로 사용자 + 에이전트 양쪽에 전달
 if [ -n "$CONTEXT" ]; then
-  HARNESS_DIR="$CLAUDE_PROJECT_DIR/.harness"
+  HARNESS_DIR="$PROJECT_DIR/.harness"
   mkdir -p "$HARNESS_DIR"
 
   # 즉시 학습 — 에러 코드를 learnings.json에 바로 기록 (세션 끝까지 안 기다림)

@@ -2,6 +2,8 @@
 # harness: log-transpiler — converts raw error logs into structured AI-readable format
 # 다른 hooks에서 호출되는 유틸리티 스크립트
 set -euo pipefail
+# 에이전트 환경변수 통합 — Claude/Gemini/Codex/Cursor 호환
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GEMINI_PROJECT_DIR:-${CODEX_PROJECT_DIR:-${CURSOR_PROJECT_DIR:-$PWD}}}}"
 
 # Usage: echo "raw error log" | .claude/hooks/log-transpiler.sh <source>
 # source: lint | typecheck | test | build

@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # harness: session-init — injects project context on session start
 set -euo pipefail
+# 에이전트 환경변수 통합 — Claude/Gemini/Codex/Cursor 호환
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GEMINI_PROJECT_DIR:-${CODEX_PROJECT_DIR:-${CURSOR_PROJECT_DIR:-$PWD}}}}"
 
-CONFIG="$CLAUDE_PROJECT_DIR/harness.config.json"
+CONFIG="$PROJECT_DIR/harness.config.json"
 
 if [ ! -f "$CONFIG" ]; then
   exit 0
@@ -28,7 +30,7 @@ SCOPES=$(jq -r '.agent.allowedScopes[]' "$CONFIG" 2>/dev/null | tr '\n' ', ' | s
 echo "Allowed scopes: $SCOPES"
 
 # 메트릭 요약 (최근 7일) — WEEK_AGO 이후 라인만 필터
-METRICS_FILE="$CLAUDE_PROJECT_DIR/.harness/metrics.jsonl"
+METRICS_FILE="$PROJECT_DIR/.harness/metrics.jsonl"
 if [ -f "$METRICS_FILE" ] && [ -s "$METRICS_FILE" ]; then
   WEEK_AGO=$(date -v-7d +%Y-%m-%d 2>/dev/null || date -d '7 days ago' +%Y-%m-%d 2>/dev/null || echo "")
   if [ -n "$WEEK_AGO" ]; then
@@ -58,7 +60,7 @@ if [ -n "$IMPORTS" ]; then
 fi
 
 # Domain glossary
-GLOSSARY="$CLAUDE_PROJECT_DIR/domain-glossary.json"
+GLOSSARY="$PROJECT_DIR/domain-glossary.json"
 if [ -f "$GLOSSARY" ]; then
   TERM_COUNT=$(jq '.terms | length' "$GLOSSARY")
   TERMS=$(jq -r '.terms | keys[]' "$GLOSSARY" | tr '\n' ', ' | sed 's/,$//')
@@ -78,12 +80,12 @@ echo "6. /done    → 품질 게이트 + 커밋 + MR"
 echo ""
 
 PLAN="no"; GLOSSARY_EXISTS="no"; DESIGN="no"
-[ -f "$CLAUDE_PROJECT_DIR/docs/plan.json" ] && PLAN="yes"
-[ -f "$CLAUDE_PROJECT_DIR/domain-glossary.json" ] && GLOSSARY_EXISTS="yes"
-[ -d "$CLAUDE_PROJECT_DIR/docs/designs" ] && [ "$(ls -A "$CLAUDE_PROJECT_DIR/docs/designs" 2>/dev/null)" ] && DESIGN="yes"
+[ -f "$PROJECT_DIR/docs/plan.json" ] && PLAN="yes"
+[ -f "$PROJECT_DIR/domain-glossary.json" ] && GLOSSARY_EXISTS="yes"
+[ -d "$PROJECT_DIR/docs/designs" ] && [ "$(ls -A "$PROJECT_DIR/docs/designs" 2>/dev/null)" ] && DESIGN="yes"
 
 # Learnings
-LEARNINGS="$CLAUDE_PROJECT_DIR/.harness/learnings.json"
+LEARNINGS="$PROJECT_DIR/.harness/learnings.json"
 if [ -f "$LEARNINGS" ]; then
   LEARN_COUNT=$(jq '.learnings | length' "$LEARNINGS" 2>/dev/null || echo 0)
   if [ "$LEARN_COUNT" -gt 0 ]; then

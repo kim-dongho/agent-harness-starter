@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # harness: scope-guard — blocks file writes outside allowed scopes
 set -euo pipefail
+# 에이전트 환경변수 통합 — Claude/Gemini/Codex/Cursor 호환
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GEMINI_PROJECT_DIR:-${CODEX_PROJECT_DIR:-${CURSOR_PROJECT_DIR:-$PWD}}}}"
 
-_log() { mkdir -p "$CLAUDE_PROJECT_DIR/.harness"; printf "[%s] scope-guard: %s\n" "$(date -u +%H:%M:%S)" "$1" >> "$CLAUDE_PROJECT_DIR/.harness/harness.log"; }
-_metric() { mkdir -p "$CLAUDE_PROJECT_DIR/.harness"; printf '{"ts":"%s","hook":"scope-guard","event":"%s","file":"%s"}\n' "$(TZ=Asia/Seoul date +%Y-%m-%dT%H:%M:%S+09:00)" "$1" "$2" >> "$CLAUDE_PROJECT_DIR/.harness/metrics.jsonl"; }
+_log() { mkdir -p "$PROJECT_DIR/.harness"; printf "[%s] scope-guard: %s\n" "$(date -u +%H:%M:%S)" "$1" >> "$PROJECT_DIR/.harness/harness.log"; }
+_metric() { mkdir -p "$PROJECT_DIR/.harness"; printf '{"ts":"%s","hook":"scope-guard","event":"%s","file":"%s"}\n' "$(TZ=Asia/Seoul date +%Y-%m-%dT%H:%M:%S+09:00)" "$1" "$2" >> "$PROJECT_DIR/.harness/metrics.jsonl"; }
 
 INPUT=$(cat)
 FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
@@ -12,14 +14,14 @@ if [ -z "$FILE_PATH" ]; then
   exit 0
 fi
 
-CONFIG="$CLAUDE_PROJECT_DIR/harness.config.json"
+CONFIG="$PROJECT_DIR/harness.config.json"
 if [ ! -f "$CONFIG" ]; then
   exit 0
 fi
 
 # 상대 경로 변환 + .. 방어
 if [[ "$FILE_PATH" == /* ]]; then
-  REL_PATH="${FILE_PATH#${CLAUDE_PROJECT_DIR%/}/}"
+  REL_PATH="${FILE_PATH#${PROJECT_DIR%/}/}"
 else
   REL_PATH="$FILE_PATH"
 fi

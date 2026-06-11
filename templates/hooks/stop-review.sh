@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # harness: stop-review — build + lint + 변경분 테스트 + scope check
 set -euo pipefail
+# 에이전트 환경변수 통합 — Claude/Gemini/Codex/Cursor 호환
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GEMINI_PROJECT_DIR:-${CODEX_PROJECT_DIR:-${CURSOR_PROJECT_DIR:-$PWD}}}}"
 
-CONFIG="$CLAUDE_PROJECT_DIR/harness.config.json"
+CONFIG="$PROJECT_DIR/harness.config.json"
 if [ ! -f "$CONFIG" ]; then
   exit 0
 fi
@@ -100,8 +102,8 @@ fi
 
 # 5. 에러 있으면 errors.log에 축적
 if [ "$HAS_ERRORS" = true ]; then
-  mkdir -p "$CLAUDE_PROJECT_DIR/.harness"
-  printf -- "--- %s ---\n%b\n\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$CONTEXT" >> "$CLAUDE_PROJECT_DIR/.harness/errors.log"
+  mkdir -p "$PROJECT_DIR/.harness"
+  printf -- "--- %s ---\n%b\n\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$CONTEXT" >> "$PROJECT_DIR/.harness/errors.log"
 fi
 
 if [ -n "$CONTEXT" ]; then

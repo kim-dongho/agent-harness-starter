@@ -15,8 +15,10 @@
 # exit 0: 항상 (Stop hook은 차단하지 않고 피드백만)
 # ──────────────────────────────────────────────────────────────
 set -euo pipefail
+# 에이전트 환경변수 통합 — Claude/Gemini/Codex/Cursor 호환
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GEMINI_PROJECT_DIR:-${CODEX_PROJECT_DIR:-${CURSOR_PROJECT_DIR:-$PWD}}}}"
 
-CONFIG="$CLAUDE_PROJECT_DIR/harness.config.json"
+CONFIG="$PROJECT_DIR/harness.config.json"
 if [ ! -f "$CONFIG" ]; then
   exit 0
 fi
@@ -102,8 +104,8 @@ fi
 # 5. 에러가 하나라도 있으면 .harness/errors.log에 축적
 #    learnings-recorder.sh가 이 파일을 읽어서 learnings.json에 규칙으로 변환
 if [ "$HAS_ERRORS" = true ]; then
-  mkdir -p "$CLAUDE_PROJECT_DIR/.harness"
-  printf -- "--- %s ---\n%b\n\n" "$(TZ=Asia/Seoul date +%Y-%m-%dT%H:%M:%S+09:00)" "$CONTEXT" >> "$CLAUDE_PROJECT_DIR/.harness/errors.log"
+  mkdir -p "$PROJECT_DIR/.harness"
+  printf -- "--- %s ---\n%b\n\n" "$(TZ=Asia/Seoul date +%Y-%m-%dT%H:%M:%S+09:00)" "$CONTEXT" >> "$PROJECT_DIR/.harness/errors.log"
 fi
 
 # 결과 출력
