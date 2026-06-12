@@ -6,7 +6,7 @@
  */
 import type { AgentAdapter, HarnessConfig, AdapterOutput } from '../types.js';
 import { buildProjectContext, buildCodingPrinciples, buildConventionRules, buildCodingStandards, buildWorkflowRules } from '../builders.js';
-import { CODE_REVIEWER_INSTRUCTIONS, PLAN_REVIEWER_INSTRUCTIONS } from '../constants.js';
+import { CODE_REVIEWER_INSTRUCTIONS, PLAN_REVIEWER_INSTRUCTIONS, CODE_REVIEW_SKILL, METRICS_SKILL } from '../constants.js';
 
 export const geminiAdapter: AgentAdapter = {
   name: 'Gemini CLI',
@@ -36,6 +36,18 @@ export const geminiAdapter: AgentAdapter = {
     files.push({
       path: '.gemini/agents/plan-reviewer.md',
       content: `---\nname: plan-reviewer\ndescription: 계획 리뷰 — 기능 간 충돌, 우선순위, 누락, 일정을 검증한다.\ntools:\n  - read_file\n  - grep_search\ntemperature: 0.2\nmax_turns: 10\n---\n\n${PLAN_REVIEWER_INSTRUCTIONS}`,
+    });
+
+    // .gemini/agents/code-review.md — 코드 리뷰 스킬
+    files.push({
+      path: '.gemini/agents/code-review.md',
+      content: `---\nname: code-review\ndescription: 3관점 병렬 코드 리뷰 (보안/아키텍처/품질)\ntools:\n  - read_file\n  - grep_search\n  - shell\ntemperature: 0.2\nmax_turns: 15\n---\n\n${CODE_REVIEW_SKILL}`,
+    });
+
+    // .gemini/agents/metrics.md — 메트릭 스킬
+    files.push({
+      path: '.gemini/agents/metrics.md',
+      content: `---\nname: metrics\ndescription: 하네스 메트릭 집계 (차단율, self-heal, first-pass)\ntools:\n  - read_file\n  - shell\ntemperature: 0.0\nmax_turns: 5\n---\n\n${METRICS_SKILL}`,
     });
 
     // GEMINI.md

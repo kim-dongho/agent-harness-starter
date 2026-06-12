@@ -6,7 +6,7 @@
  */
 import type { AgentAdapter, HarnessConfig, AdapterOutput } from '../types.js';
 import { buildProjectContext, buildCodingPrinciples, buildConventionRules, buildCodingStandards, buildWorkflowRules } from '../builders.js';
-import { CODE_REVIEWER_INSTRUCTIONS, PLAN_REVIEWER_INSTRUCTIONS } from '../constants.js';
+import { CODE_REVIEWER_INSTRUCTIONS, PLAN_REVIEWER_INSTRUCTIONS, CODE_REVIEW_SKILL, METRICS_SKILL } from '../constants.js';
 
 export const codexAdapter: AgentAdapter = {
   name: 'OpenAI Codex CLI',
@@ -68,6 +68,34 @@ export const codexAdapter: AgentAdapter = {
         'developer_instructions = """',
         '코드베이스를 탐색하여 변경 대상 파일, 의존 관계, 영향 범위를 파악한다.',
         '코드를 수정하지 않는다. 탐색 결과만 보고한다.',
+        '"""',
+      ].join('\n'),
+    });
+
+    // .codex/agents/code-review.toml — 코드 리뷰 스킬
+    files.push({
+      path: '.codex/agents/code-review.toml',
+      content: [
+        'name = "code_review"',
+        'description = "3관점 병렬 코드 리뷰 (보안/아키텍처/품질)"',
+        'model_reasoning_effort = "high"',
+        'sandbox_mode = "read-only"',
+        'developer_instructions = """',
+        CODE_REVIEW_SKILL,
+        '"""',
+      ].join('\n'),
+    });
+
+    // .codex/agents/metrics.toml — 메트릭 스킬
+    files.push({
+      path: '.codex/agents/metrics.toml',
+      content: [
+        'name = "metrics"',
+        'description = "하네스 메트릭 집계 (차단율, self-heal, first-pass)"',
+        'model_reasoning_effort = "low"',
+        'sandbox_mode = "read-only"',
+        'developer_instructions = """',
+        METRICS_SKILL,
         '"""',
       ].join('\n'),
     });
