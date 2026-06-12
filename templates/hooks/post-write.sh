@@ -223,9 +223,13 @@ if [ -n "$CONTEXT" ]; then
     if [ "$CODE_COUNT" -ge 3 ]; then
       RULE_JSON=$(_code_to_config_rule "$CODE")
       [ -z "$RULE_JSON" ] && continue
-      RULE_ID=$(echo "$RULE_JSON" | jq -r '.id')
+      RULE_ID=$(printf '%s' "$RULE_JSON" | jq -r '.id')
+      RULE_DESC=$(printf '%s' "$RULE_JSON" | jq -r '.description')
       if echo "$EXISTING_RULES" | grep -q "$RULE_ID" 2>/dev/null; then continue; fi
-      AUTOHARNESS_MSG="${AUTOHARNESS_MSG}\n\n💡 [AutoHarness] ${CODE}가 ${CODE_COUNT}회 반복됐습니다. codingStandards에 추가를 제안합니다:\n  ${RULE_JSON}\n추가할까요?"
+      # config에 자동 추가
+      TMPFILE=$(mktemp "$CONFIG.XXXXXX")
+      jq --argjson rule "$RULE_JSON" '.rules.codingStandards += [$rule]' "$CONFIG" > "$TMPFILE" && mv "$TMPFILE" "$CONFIG"
+      AUTOHARNESS_MSG="${AUTOHARNESS_MSG}\n🔧 [AutoHarness] ${CODE} ${CODE_COUNT}회 반복 → \"${RULE_ID}\" 자동 추가됨 (${RULE_DESC})"
     fi
   done
 
@@ -236,10 +240,19 @@ if [ -n "$CONTEXT" ]; then
     tail -100 "$HARNESS_DIR/errors.log" > "$HARNESS_DIR/errors.log.tmp" && mv "$HARNESS_DIR/errors.log.tmp" "$HARNESS_DIR/errors.log"
   fi
 
-  # 사용자에게 보여줄 메시지
-  USER_MSG=$(printf "🔧 post-write: 이슈 발견 — %s\n%b" "$REL_PATH" "$CONTEXT")
-  # 에이전트에게 전달할 지시
-  AGENT_MSG=$(printf "%b\n\n───────────────────────────────────\n🤖 [자동 검증] 위 이슈에 대해 다음을 수행하라:\n1. 각 이슈의 원인을 한 줄로 설명\n2. 수정 계획을 제시\n3. 사용자에게 \"수정할까요?\" 컨펌을 받은 후 수정\n절대 설명 없이 바로 수정하지 마라.%b" "$CONTEXT" "$AUTOHARNESS_MSG")
+  # 사용자에게 보여줄 메시지 (AutoHarness 알림 포함)
+  USER_MSG=$(printf "🔧 post-write: 이슈 발견 — %s\n%b%b" "$REL_PATH" "$CONTEXT" "$AUTOHARNESS_MSG")
+
+  # 에러 종류 판별 — 단순 에러(자동 수정) vs 복잡 에러(컨펌 필요)
+  HAS_SECURITY=$(printf '%s' "$CONTEXT" | grep -qE 'SWC-|Reentrancy|selfdestruct|delegatecall|unwrap|assert!' && echo "yes" || echo "no")
+
+  if [ "$HAS_SECURITY" = "yes" ]; then
+    # 보안/복잡 에러 → 컨펌 후 수정
+    AGENT_MSG=$(printf "%b\n\n───────────────────────────────────\n🤖 [자동 검증] 보안 관련 이슈가 포함되어 있다. 다음을 수행하라:\n1. 각 이슈의 원인을 한 줄로 설명\n2. 수정 계획을 제시\n3. 사용자에게 \"수정할까요?\" 컨펌을 받은 후 수정\n절대 설명 없이 바로 수정하지 마라.%b" "$CONTEXT" "$AUTOHARNESS_MSG")
+  else
+    # 단순 에러 (타입 불일치, lint 등) → 즉시 자동 수정
+    AGENT_MSG=$(printf "%b\n\n───────────────────────────────────\n🤖 [자동 수정] 단순 에러를 감지했다. 즉시 수정하라:\n1. 각 이슈의 원인을 한 줄로 설명\n2. 바로 수정\n사용자 컨펌 불필요.%b" "$CONTEXT" "$AUTOHARNESS_MSG")
+  fi
 
   # JSON 출력 — systemMessage(사용자 화면) + additionalContext(에이전트 컨텍스트)
   jq -n \
