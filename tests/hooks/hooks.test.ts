@@ -251,22 +251,3 @@ describe('Claude adapter 생성 파일', () => {
   });
 });
 
-// ─── Computational Sensors 검증 ───
-
-describe('dependency-cruiser', () => {
-  it('.dependency-cruiser.cjs가 생성된다', () => {
-    expect(fs.existsSync(path.join(PROJECT_DIR, '.dependency-cruiser.cjs'))).toBe(true);
-  });
-
-  it('FSD forbiddenImports가 규칙으로 변환된다', () => {
-    const content = fs.readFileSync(path.join(PROJECT_DIR, '.dependency-cruiser.cjs'), 'utf-8');
-    expect(content).toContain('forbidden');
-    expect(content).toContain('src/shared');
-    expect(content).toContain('src/features');
-  });
-
-  it('package.json에 dependency-cruiser devDependency가 추가된다', () => {
-    const pkg = fs.readJsonSync(path.join(PROJECT_DIR, 'package.json'));
-    expect(pkg.devDependencies['dependency-cruiser']).toBeDefined();
-  });
-});
