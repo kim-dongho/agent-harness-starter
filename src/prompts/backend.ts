@@ -16,6 +16,7 @@ import {
   PYTHON_PACKAGE_MANAGERS,
   PYTHON_ORMS,
   JAVA_BUILD_TOOLS,
+  JAVA_ORMS,
   RUST_ORMS,
   KOTLIN_BUILD_TOOLS,
   DOTNET_ORMS,
@@ -237,6 +238,13 @@ export async function promptJava(choices: UserChoices): Promise<UserChoices | nu
   });
   if (cancelled(buildTool)) return null;
   choices.buildTool = buildTool as string;
+
+  const orm = await p.select({
+    message: 'ORM을 선택하세요',
+    options: JAVA_ORMS.map((o) => ({ value: o.value, label: o.label })),
+  });
+  if (cancelled(orm)) return null;
+  choices.orm = orm as string;
 
   const database = await p.select({
     message: 'DB를 선택하세요',

@@ -69,16 +69,25 @@ export async function promptFrontend(choices: UserChoices): Promise<UserChoices 
     choices.namingConvention = naming as string;
   }
 
+  const isReact = ['nextjs-app', 'nextjs-pages', 'react-vite', 'remix'].includes(choices.stack);
+  const isVue = ['vue-vite', 'nuxt'].includes(choices.stack);
+  const isAngular = choices.stack === 'angular';
+  const isSvelte = ['sveltekit'].includes(choices.stack);
+
+  const styleOptions = STYLES.filter((s) => {
+    if (s.value === 'styled-components') return isReact;
+    return true;
+  });
   const style = await p.select({
     message: '스타일링을 선택하세요',
-    options: STYLES.map((s) => ({ value: s.value, label: s.label })),
+    options: styleOptions.map((s) => ({ value: s.value, label: s.label })),
   });
   if (cancelled(style)) return null;
   choices.style = style as string;
-
   const stateOptions = FE_STATE_MANAGEMENT.filter((s) => {
-    if (s.value === 'pinia') return ['vue-vite', 'nuxt'].includes(choices.stack);
-    if (s.value === 'ngrx') return choices.stack === 'angular';
+    if (s.value === 'pinia') return isVue;
+    if (s.value === 'ngrx') return isAngular;
+    if (['redux-toolkit', 'zustand', 'jotai', 'react-query', 'swr'].includes(s.value)) return isReact;
     return true;
   });
   const stateManagement = await p.multiselect({
@@ -97,7 +106,8 @@ export async function promptFrontend(choices: UserChoices): Promise<UserChoices 
   choices.testFramework = testFramework as string;
 
   const formOptions = FE_FORM_LIBRARIES.filter((f) => {
-    if (f.value === 'vee-validate') return ['vue-vite', 'nuxt'].includes(choices.stack);
+    if (f.value === 'vee-validate') return isVue;
+    if (['react-hook-form', 'formik'].includes(f.value)) return isReact;
     return true;
   });
   const formLibrary = await p.select({
@@ -108,8 +118,9 @@ export async function promptFrontend(choices: UserChoices): Promise<UserChoices 
   choices.formLibrary = formLibrary as string;
 
   const i18nOptions = FE_I18N.filter((i) => {
-    if (i.value === 'next-intl') return ['nextjs-app', 'nextjs-pages'].includes(choices.stack);
-    if (i.value === 'vue-i18n') return ['vue-vite', 'nuxt'].includes(choices.stack);
+    if (i.value === 'next-intl') return choices.stack === 'nextjs-app';
+    if (i.value === 'react-i18next') return isReact;
+    if (i.value === 'vue-i18n') return isVue;
     return true;
   });
   const i18n = await p.select({

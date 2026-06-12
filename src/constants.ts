@@ -208,7 +208,6 @@ export const STYLES = [
   { value: 'styled-components', label: 'styled-components' },
   { value: 'css-module', label: 'CSS Module' },
   { value: 'vanilla-extract', label: 'vanilla-extract' },
-  { value: 'panda-css', label: 'Panda CSS' },
 ] as const;
 
 /** 프론트엔드 상태관리 라이브러리 옵션 */
@@ -296,6 +295,13 @@ export const JAVA_BUILD_TOOLS = [
   { value: 'maven', label: 'Maven' },
 ] as const;
 
+/** Java ORM 옵션 */
+export const JAVA_ORMS = [
+  { value: 'spring-data-jpa', label: 'Spring Data JPA (Hibernate)' },
+  { value: 'mybatis', label: 'MyBatis' },
+  { value: 'none', label: 'None' },
+] as const;
+
 // ─── Backend Rust 옵션 ───
 
 /** Rust ORM 옵션 */
@@ -354,14 +360,31 @@ export const API_DOCS = [
 
 // ─── Blockchain 옵션 ───
 
-/** 블록체인 네트워크 옵션 */
-export const BLOCKCHAIN_NETWORKS = [
-  { value: 'ethereum', label: 'Ethereum' },
-  { value: 'polygon', label: 'Polygon' },
-  { value: 'arbitrum', label: 'Arbitrum' },
-  { value: 'base', label: 'Base' },
-  { value: 'other', label: 'Other' },
-] as const;
+/** 블록체인 네트워크 옵션 — 스택별 필터링 */
+export const BLOCKCHAIN_NETWORKS: Record<string, { value: string; label: string }[]> = {
+  'solidity-hardhat': [
+    { value: 'ethereum', label: 'Ethereum' },
+    { value: 'polygon', label: 'Polygon' },
+    { value: 'arbitrum', label: 'Arbitrum' },
+    { value: 'base', label: 'Base' },
+    { value: 'other', label: 'Other EVM' },
+  ],
+  'solidity-foundry': [
+    { value: 'ethereum', label: 'Ethereum' },
+    { value: 'polygon', label: 'Polygon' },
+    { value: 'arbitrum', label: 'Arbitrum' },
+    { value: 'base', label: 'Base' },
+    { value: 'other', label: 'Other EVM' },
+  ],
+  'solana-anchor': [
+    { value: 'solana-mainnet', label: 'Solana Mainnet' },
+    { value: 'solana-devnet', label: 'Solana Devnet' },
+  ],
+  'move-sui': [
+    { value: 'sui-mainnet', label: 'Sui Mainnet' },
+    { value: 'sui-testnet', label: 'Sui Testnet' },
+  ],
+};
 
 // ─── Mobile 옵션 ───
 

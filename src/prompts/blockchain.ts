@@ -15,9 +15,10 @@ import type { UserChoices } from './types.js';
  * @returns 네트워크 옵션이 추가된 선택 결과 또는 취소 시 null
  */
 export async function promptBlockchain(choices: UserChoices): Promise<UserChoices | null> {
+  const networks = BLOCKCHAIN_NETWORKS[choices.stack] ?? BLOCKCHAIN_NETWORKS['solidity-hardhat'];
   const network = await p.select({
     message: '네트워크를 선택하세요',
-    options: BLOCKCHAIN_NETWORKS.map((n) => ({ value: n.value, label: n.label })),
+    options: networks.map((n) => ({ value: n.value, label: n.label })),
   });
   if (cancelled(network)) return null;
   choices.network = network as string;
