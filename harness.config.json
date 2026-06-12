@@ -33,7 +33,10 @@
       "templates/**/*",
       ".claude/**/*"
     ],
-    "adapters": ["claude", "gemini"]
+    "adapters": [
+      "claude",
+      "gemini"
+    ]
   },
   "rules": {
     "fileNaming": {

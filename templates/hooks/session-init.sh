@@ -121,15 +121,17 @@ if [ -f "$LEARNINGS" ]; then
 
       if echo "$EXISTING_RULES" | grep -q "$RULE_ID" 2>/dev/null; then continue; fi
 
-      SUGGESTIONS="${SUGGESTIONS}\n  💡 ${CODE} (${COUNT}회) → +\"${RULE_ID}\" (${RULE_DESC})"
+      # config에 자동 추가
+      RULE_JSON="{\"id\":\"${RULE_ID}\",\"description\":\"${RULE_DESC}\",\"severity\":\"warning\"}"
+      TMPFILE=$(mktemp "$CONFIG.XXXXXX")
+      jq --argjson rule "$RULE_JSON" '.rules.codingStandards += [$rule]' "$CONFIG" > "$TMPFILE" && mv "$TMPFILE" "$CONFIG"
+      SUGGESTIONS="${SUGGESTIONS}\n  🔧 ${CODE} (${COUNT}회) → \"${RULE_ID}\" 자동 추가됨"
     done <<< "$FREQ"
 
     if [ -n "$SUGGESTIONS" ]; then
       echo ""
       echo "=== AutoHarness ==="
       printf '%b\n' "$SUGGESTIONS"
-      echo ""
-      echo "→ 위 규칙을 codingStandards에 추가하시겠습니까?"
     fi
   fi
 fi
