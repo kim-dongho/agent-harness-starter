@@ -166,11 +166,11 @@ export async function generateHarnessConfig(projectDir: string, choices: UserCho
     },
     rules: {
       fileNaming: {
-        components: 'PascalCase' as const,
-        hooks: 'camelCase' as const,
-        utils: 'camelCase' as const,
-        services: 'camelCase' as const,
-        models: 'camelCase' as const,
+        components: (choices.namingConvention ?? 'PascalCase') as string,
+        hooks: (choices.namingConvention ?? 'camelCase') as string,
+        utils: (choices.namingConvention ?? 'camelCase') as string,
+        services: (choices.namingConvention ?? 'camelCase') as string,
+        models: (choices.namingConvention ?? 'camelCase') as string,
         testSuffix: '.test',
       },
       codingStandards: [
