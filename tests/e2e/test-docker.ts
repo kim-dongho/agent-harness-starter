@@ -4,19 +4,19 @@
  * 모든 스택 × Docker 영향 옵션 브루트포스 테스트
  *
  * 사용법:
- *   npx tsx scripts/test-docker.ts              # 전체
- *   npx tsx scripts/test-docker.ts go           # 카테고리/스택 필터
- *   npx tsx scripts/test-docker.ts monorepo     # 모노레포만
- *   npx tsx scripts/test-docker.ts --skip-build # 빌드 스킵
- *   npx tsx scripts/test-docker.ts --clean      # 정리
+ *   npx tsx tests/e2e/test-docker.ts              # 전체
+ *   npx tsx tests/e2e/test-docker.ts go           # 카테고리/스택 필터
+ *   npx tsx tests/e2e/test-docker.ts monorepo     # 모노레포만
+ *   npx tsx tests/e2e/test-docker.ts --skip-build # 빌드 스킵
+ *   npx tsx tests/e2e/test-docker.ts --clean      # 정리
  */
 import path from 'node:path';
 import fs from 'fs-extra';
 import { execSync } from 'node:child_process';
-import { scaffold } from '../src/scaffolder/index.js';
-import type { UserChoices, StackConfig } from '../src/prompts/types.js';
+import { scaffold } from '../../src/scaffolder/index.js';
+import type { UserChoices, StackConfig } from '../../src/prompts/types.js';
 
-const TEST_DIR = path.resolve(import.meta.dirname, '..', '.test-docker');
+const TEST_DIR = path.resolve(import.meta.dirname, '../..', '.test-docker');
 const SKIP_BUILD = process.argv.includes('--skip-build');
 
 // ─── 타입 ───

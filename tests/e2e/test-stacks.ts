@@ -7,18 +7,18 @@
  * 인터랙티브 프롬프트를 우회하여 프로그래밍 방식으로 scaffold를 호출.
  *
  * 사용법:
- *   npx tsx scripts/test-stacks.ts              # 전체 테스트
- *   npx tsx scripts/test-stacks.ts frontend     # 카테고리별
- *   npx tsx scripts/test-stacks.ts nextjs-app    # 단일 스택
- *   npx tsx scripts/test-stacks.ts monorepo      # 모노레포 테스트
+ *   npx tsx tests/e2e/test-stacks.ts              # 전체 테스트
+ *   npx tsx tests/e2e/test-stacks.ts frontend     # 카테고리별
+ *   npx tsx tests/e2e/test-stacks.ts nextjs-app    # 단일 스택
+ *   npx tsx tests/e2e/test-stacks.ts monorepo      # 모노레포 테스트
  */
 import path from 'node:path';
 import fs from 'fs-extra';
 import { execSync } from 'node:child_process';
-import { scaffold } from '../src/scaffolder/index.js';
-import type { UserChoices } from '../src/prompts/types.js';
+import { scaffold } from '../../src/scaffolder/index.js';
+import type { UserChoices } from '../../src/prompts/types.js';
 
-const TEST_DIR = path.resolve(import.meta.dirname, '..', '.test-output');
+const TEST_DIR = path.resolve(import.meta.dirname, '../..', '.test-output');
 
 // ─── 테스트 케이스 정의 ───
 
