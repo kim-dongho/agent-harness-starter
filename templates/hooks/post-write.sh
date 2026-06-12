@@ -75,13 +75,19 @@ if [ "$LANGUAGE" = "typescript" ]; then
   fi
 fi
 
-# 3. Import 위반 검사
-if [ -f "$PROJECT_DIR/.dependency-cruiser.cjs" ] && command -v npx &>/dev/null; then
-  DEP_RESULT=$(npx depcruise --config "$PROJECT_DIR/.dependency-cruiser.cjs" "$FILE_PATH" 2>&1) || true
-  if echo "$DEP_RESULT" | grep -q "error"; then
-    DEP_ERRORS=$(echo "$DEP_RESULT" | grep "error" | head -3)
-    CONTEXT="$CONTEXT\n⚠️ Architecture violation in $REL_PATH:\n$DEP_ERRORS"
-  fi
+# 3. Import 위반 검사 — harness.config.json의 forbiddenImports로 직접 검증
+FILE_CONTENT=$(cat "$FILE_PATH" 2>/dev/null || true)
+if [ -n "$FILE_CONTENT" ]; then
+  FORBIDDEN=$(jq -r '.architecture.forbiddenImports | to_entries[]? | "\(.key):\(.value[])"' "$CONFIG" 2>/dev/null)
+  for RULE in $FORBIDDEN; do
+    FROM_DIR=$(echo "$RULE" | cut -d: -f1)
+    TO_DIR=$(echo "$RULE" | cut -d: -f2)
+    if echo "$REL_PATH" | grep -q "$FROM_DIR"; then
+      if printf '%s' "$FILE_CONTENT" | grep -qE "from.*['\"].*${TO_DIR}|import.*${TO_DIR}|require.*${TO_DIR}|from ${TO_DIR}"; then
+        CONTEXT="$CONTEXT\n⚠️ Import 위반: $FROM_DIR → $TO_DIR 금지 ($REL_PATH)"
+      fi
+    fi
+  done
 fi
 
 # 4. 블록체인 보안 자동 검사 — .sol, .rs (Anchor), .move 파일일 때
@@ -160,6 +166,48 @@ case "$REL_PATH" in
     fi
     ;;
 esac
+
+# 5. codingStandards 검증 — config에 정의된 규칙을 코드 패턴으로 검사
+CONTENT=$(cat "$FILE_PATH" 2>/dev/null || true)
+if [ -n "$CONTENT" ]; then
+  STANDARDS=$(jq -r '.rules.codingStandards[]?.id // empty' "$CONFIG" 2>/dev/null)
+  CS_ISSUES=""
+
+  # 규칙 ID → grep 패턴 매핑 (확장 가능)
+  _check_standard() {
+    local id="$1" desc="$2"
+    case "$id" in
+      no-console-log)
+        if printf '%s' "$CONTENT" | grep -qE 'console\.(log|debug|info|warn|error)\(' 2>/dev/null; then echo "  - ⚠️ [$id] $desc"; fi ;;
+      no-hardcoded-secrets)
+        if printf '%s' "$CONTENT" | grep -qiE '(api[_-]?key|secret|password|token|credential)\s*[:=]\s*["\x27][^"\x27]{8,}' 2>/dev/null; then echo "  - 🚫 [$id] $desc"; fi ;;
+      no-commented-code)
+        local cnt; cnt=$(printf '%s' "$CONTENT" | grep -c '^\s*\/\/' 2>/dev/null || echo "0")
+        if [ "${cnt}" -ge 5 ] 2>/dev/null; then echo "  - ⚠️ [$id] $desc (${cnt}줄)"; fi ;;
+      no-todo-without-issue)
+        if printf '%s' "$CONTENT" | grep -qE '(TODO|FIXME|HACK|XXX)' 2>/dev/null; then
+          if ! printf '%s' "$CONTENT" | grep -qE '(TODO|FIXME|HACK|XXX)\s*\(#[0-9]+\)' 2>/dev/null; then
+            echo "  - ⚠️ [$id] $desc"
+          fi
+        fi ;;
+      strict-return-type|no-implicit-any|strict-arg-type|strict-property-access|strict-null-check|no-unused-vars) ;; # tsc가 검증
+      no-tx-origin|fixed-pragma) ;; # 블록체인 보안은 위에서 검증
+      *) ;; # 알 수 없는 규칙 — 스킵
+    esac
+  }
+
+  while IFS=$'\t' read -r RULE_ID RULE_DESC; do
+    [ -z "$RULE_ID" ] && continue
+    ISSUE=$(_check_standard "$RULE_ID" "$RULE_DESC")
+    if [ -n "$ISSUE" ]; then
+      CS_ISSUES="${CS_ISSUES}\n${ISSUE}"
+    fi
+  done < <(jq -r '.rules.codingStandards[]? | [.id, .description] | @tsv' "$CONFIG" 2>/dev/null)
+
+  if [ -n "$CS_ISSUES" ]; then
+    CONTEXT="${CONTEXT}\n📋 codingStandards 위반 ($REL_PATH):${CS_ISSUES}"
+  fi
+fi
 
 # 메트릭 기록
 if [ -n "$CONTEXT" ]; then
