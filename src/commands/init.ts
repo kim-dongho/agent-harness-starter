@@ -295,21 +295,30 @@ export async function detectProject(projectDir: string): Promise<DetectedProject
     else if (lang === 'move') { result.packageManager = 'sui'; result.testRunner = 'sui move test'; }
   }
 
-  // 아키텍처 감지 (디렉토리 구조 기준) — 루트 + 워크스페이스 하위
+  // 아키텍처 감지 (디렉토리 구조 기준) — FSD 최우선, 루트 + 워크스페이스 하위
   const dirsToCheck = [projectDir, ...workspacePaths];
+  // 1차: FSD 먼저 찾기 (features + shared가 있으면 FSD 확정)
   for (const dir of dirsToCheck) {
     const srcDir = path.join(dir, 'src');
     if (await fs.pathExists(srcDir)) {
       const entries: string[] = await fs.readdir(srcDir).catch(() => [] as string[]);
       if (entries.includes('features') && entries.includes('shared')) { result.architecture = 'fsd'; break; }
-      else if (entries.includes('domain') && entries.includes('application')) { result.architecture = 'clean'; break; }
-      else if (entries.includes('modules')) { result.architecture = 'modular'; break; }
-      else if (entries.includes('controllers') && entries.includes('services')) { result.architecture = 'modular'; break; }
     }
-    // Go/Rust/Python — src 없이 루트에 직접 구조가 있는 경우
-    const rootEntries: string[] = await fs.readdir(dir).catch(() => [] as string[]);
-    if (rootEntries.includes('internal') && rootEntries.includes('cmd')) { result.architecture = 'clean'; break; }
-    else if (rootEntries.includes('domain') && rootEntries.includes('handler')) { result.architecture = 'clean'; break; }
+  }
+  // 2차: FSD가 아니면 다른 아키텍처 체크
+  if (result.architecture === 'modular') {
+    for (const dir of dirsToCheck) {
+      const srcDir = path.join(dir, 'src');
+      if (await fs.pathExists(srcDir)) {
+        const entries: string[] = await fs.readdir(srcDir).catch(() => [] as string[]);
+        if (entries.includes('domain') && entries.includes('application')) { result.architecture = 'clean'; break; }
+        else if (entries.includes('modules')) { result.architecture = 'modular'; break; }
+        else if (entries.includes('controllers') && entries.includes('services')) { result.architecture = 'modular'; break; }
+      }
+      const rootEntries: string[] = await fs.readdir(dir).catch(() => [] as string[]);
+      if (rootEntries.includes('internal') && rootEntries.includes('cmd')) { result.architecture = 'clean'; break; }
+      else if (rootEntries.includes('domain') && rootEntries.includes('handler')) { result.architecture = 'clean'; break; }
+    }
   }
 
   return result;

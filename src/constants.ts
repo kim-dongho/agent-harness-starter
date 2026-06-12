@@ -291,7 +291,8 @@ export const PYTHON_ORMS = [
 
 /** Java 빌드 도구 옵션 */
 export const JAVA_BUILD_TOOLS = [
-  { value: 'gradle', label: 'Gradle (Kotlin DSL)' },
+  { value: 'gradle', label: 'Gradle (Groovy DSL)' },
+  { value: 'gradle-kts', label: 'Gradle (Kotlin DSL)' },
   { value: 'maven', label: 'Maven' },
 ] as const;
 
