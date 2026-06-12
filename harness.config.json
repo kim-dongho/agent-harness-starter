@@ -29,7 +29,11 @@
     "persona": "senior-developer",
     "allowedScopes": [
       "src/**/*",
-      "tests/**/*"
+      "tests/**/*",
+      "templates/**/*",
+      ".claude/**/*",
+      "ROADMAP.md",
+      "README.md"
     ],
     "adapters": [
       "claude",
