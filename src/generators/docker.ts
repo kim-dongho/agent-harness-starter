@@ -225,16 +225,16 @@ CMD ["npx", "tsx", "src/index.ts"]
 `;
   }
 
-  // NestJS, Fastify 등 CLI가 만든 프로젝트
+  // NestJS 등 CLI가 만든 프로젝트 — build 스크립트가 없으면 tsx로 fallback
   return `FROM node:22-alpine
 WORKDIR /app
 ${setup}
 COPY . .
 RUN ${install}
-RUN ${pmRun(pm)} run build
+RUN if grep -q '"build"' package.json; then ${pmRun(pm)} run build; fi
 
 EXPOSE 3000
-CMD ["node", "dist/main.js"]
+CMD ["sh", "-c", "if [ -f dist/main.js ]; then node dist/main.js; else npx tsx src/main.ts; fi"]
 `;
 }
 
@@ -468,15 +468,15 @@ async function writeDockerCompose(projectDir: string, stacks: StackConfig[]): Pr
     if (category === 'frontend' || category === 'node-backend') {
       svc.environment = ['NODE_ENV=production'];
     }
-    if (config.database && config.database !== 'none') {
+    if (config.database && config.database !== 'none' && config.database !== 'sqlite') {
       svc.depends_on = ['db'];
     }
 
     services[appName] = svc;
   }
 
-  // DB
-  const dbConfig = stacks.find((s) => s.database && s.database !== 'none');
+  // DB — sqlite는 파일 기반이라 Docker 컨테이너 불필요
+  const dbConfig = stacks.find((s) => s.database && s.database !== 'none' && s.database !== 'sqlite');
   if (dbConfig?.database) {
     services.db = getDbService(dbConfig.database);
   }
