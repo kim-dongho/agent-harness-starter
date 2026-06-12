@@ -8,7 +8,14 @@ _log() { mkdir -p "$PROJECT_DIR/.harness"; printf "[%s] scope-guard: %s\n" "$(da
 _metric() { mkdir -p "$PROJECT_DIR/.harness"; printf '{"ts":"%s","hook":"scope-guard","event":"%s","file":"%s"}\n' "$(TZ=Asia/Seoul date +%Y-%m-%dT%H:%M:%S+09:00)" "$1" "$2" >> "$PROJECT_DIR/.harness/metrics.jsonl"; }
 
 INPUT=$(cat)
-FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
+FILE_PATH=$(echo "$INPUT" | jq -r '
+  def patch_path:
+    capture("\\*\\*\\* (Add|Update|Delete) File: (?<path>[^\\n]+)")?.path // empty;
+  .tool_input.file_path //
+  .tool_input.path //
+  (.tool_input.patch // .tool_input.input // .tool_input | strings | patch_path) //
+  empty
+')
 
 if [ -z "$FILE_PATH" ]; then
   exit 0

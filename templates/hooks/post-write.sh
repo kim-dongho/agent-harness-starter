@@ -19,7 +19,14 @@ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GEMINI_PROJECT_DIR:-${CODEX_PROJECT_DIR:-${
 _metric() { mkdir -p "$PROJECT_DIR/.harness"; printf '{"ts":"%s","hook":"post-write","event":"%s","file":"%s","codes":%s}\n' "$(TZ=Asia/Seoul date +%Y-%m-%dT%H:%M:%S+09:00)" "$1" "$2" "${3:-[]}" >> "$PROJECT_DIR/.harness/metrics.jsonl"; }
 
 INPUT=$(cat)
-FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
+FILE_PATH=$(echo "$INPUT" | jq -r '
+  def patch_path:
+    capture("\\*\\*\\* (Add|Update|Delete) File: (?<path>[^\\n]+)")?.path // empty;
+  .tool_input.file_path //
+  .tool_input.path //
+  (.tool_input.patch // .tool_input.input // .tool_input | strings | patch_path) //
+  empty
+')
 
 if [ -z "$FILE_PATH" ]; then
   exit 0
@@ -35,6 +42,7 @@ if [[ "$FILE_PATH" == /* ]]; then
   REL_PATH="${FILE_PATH#${PROJECT_DIR%/}/}"
 else
   REL_PATH="$FILE_PATH"
+  FILE_PATH="$PROJECT_DIR/$REL_PATH"
 fi
 if [[ "$REL_PATH" == *".."* ]]; then exit 0; fi
 # $FILE_PATH가 프로젝트 디렉토리 내부인지 검증

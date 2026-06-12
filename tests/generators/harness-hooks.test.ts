@@ -69,11 +69,29 @@ describe('setupHarnessHooks — Codex CLI', () => {
     expect(settings.hooks.PostToolUse).toBeDefined();
   });
 
-  it('matcher가 Bash (file write 미지원)', async () => {
+  it('matcher가 Bash|apply_patch', async () => {
     const dir = await makeProject('codex-matcher');
     await setupHarnessHooks(dir, 'codex');
     const settings = await fs.readJson(path.join(dir, '.codex/hooks.json'));
-    expect(settings.hooks.PreToolUse[0].matcher).toBe('Bash');
+    expect(settings.hooks.PreToolUse[0].matcher).toBe('Bash|apply_patch');
+  });
+
+  it('PostToolUse에 agent 보강 훅이 포함된다', async () => {
+    const dir = await makeProject('codex-agent-hook');
+    await setupHarnessHooks(dir, 'codex');
+    const settings = await fs.readJson(path.join(dir, '.codex/hooks.json'));
+    expect(settings.hooks.PostToolUse).toHaveLength(2);
+    expect(settings.hooks.PostToolUse[1].hooks[0].type).toBe('agent');
+    expect(settings.hooks.PostToolUse[1].hooks[0].prompt).toContain('.harness/errors.log');
+  });
+
+  it('hook command가 git root 기준 경로를 사용한다', async () => {
+    const dir = await makeProject('codex-hook-command');
+    await setupHarnessHooks(dir, 'codex');
+    const settings = await fs.readJson(path.join(dir, '.codex/hooks.json'));
+    const command = settings.hooks.PreToolUse[0].hooks[0].command;
+    expect(command).toContain('git rev-parse --show-toplevel');
+    expect(command).toContain('.codex/hooks/scope-guard.sh');
   });
 });
 

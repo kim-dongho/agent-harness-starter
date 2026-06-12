@@ -12,8 +12,10 @@ const HOOKS_DIR = path.resolve('templates/hooks');
 function runHook(hookName: string, projectDir: string, input: string): { stdout: string; exitCode: number } {
   const hookPath = path.join(HOOKS_DIR, hookName);
   try {
-    const stdout = execSync(`echo '${input}' | CLAUDE_PROJECT_DIR=${projectDir} bash ${hookPath}`, {
+    const stdout = execSync(`bash "${hookPath}"`, {
       encoding: 'utf-8',
+      input,
+      env: { ...process.env, CLAUDE_PROJECT_DIR: projectDir },
       timeout: 30000,
     });
     return { stdout, exitCode: 0 };
@@ -104,6 +106,17 @@ describe('scope-guard', () => {
     const { exitCode } = runHook('scope-guard.sh', dir2, input);
     expect(exitCode).toBe(0);
   });
+
+  it('Codex apply_patch 입력에서 파일 경로를 추출한다', async () => {
+    const input = JSON.stringify({
+      tool_name: 'apply_patch',
+      tool_input: {
+        patch: '*** Begin Patch\n*** Add File: src/from-codex.ts\n+export const value = 1;\n*** End Patch\n',
+      },
+    });
+    const { exitCode } = runHook('scope-guard.sh', dir, input);
+    expect(exitCode).toBe(0);
+  });
 });
 
 // ══════════════════════════════════════════════════════════════
@@ -132,6 +145,17 @@ describe('scaffold-guard', () => {
     // exit 2 = 차단, stderr에 /generate 안내 (stdout은 비어있을 수 있음)
     expect(exitCode).toBe(2);
   });
+
+  it('Codex apply_patch 새 component 파일 → 차단', () => {
+    const input = JSON.stringify({
+      tool_name: 'apply_patch',
+      tool_input: {
+        patch: '*** Begin Patch\n*** Add File: src/components/Foo.tsx\n+export function Foo() { return null; }\n*** End Patch\n',
+      },
+    });
+    const { exitCode } = runHook('scaffold-guard.sh', dir, input);
+    expect(exitCode).toBe(2);
+  });
 });
 
 // ══════════════════════════════════════════════════════════════
@@ -146,6 +170,22 @@ describe('post-write', () => {
     const { stdout, exitCode } = runHook('post-write.sh', dir, input);
     expect(exitCode).toBe(0);
     expect(stdout.trim()).toBe('');
+  });
+
+  it('Codex apply_patch 입력에서 상대 경로 post-write 메트릭을 남긴다', async () => {
+    const dir = await createTestProject('pw-codex-relative', {
+      'src/clean.ts': 'export const x: number = 1;\n',
+    });
+    const input = JSON.stringify({
+      tool_name: 'apply_patch',
+      tool_input: {
+        patch: '*** Begin Patch\n*** Update File: src/clean.ts\n@@\n export const x: number = 1;\n*** End Patch\n',
+      },
+    });
+    const { exitCode } = runHook('post-write.sh', dir, input);
+    expect(exitCode).toBe(0);
+    const metrics = await fs.readFile(path.join(dir, '.harness/metrics.jsonl'), 'utf-8');
+    expect(metrics).toContain('"file":"src/clean.ts"');
   });
 
   it('Solidity — tx.origin + floating pragma 감지', async () => {

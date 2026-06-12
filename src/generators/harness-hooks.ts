@@ -100,12 +100,31 @@ const STOP_AGENT_PROMPT = [
   '분석 후 errors.log를 비운다.',
 ].join('\n');
 
+/** Codex PostToolUse agent hook prompt — command hook stdout 미주입 환경 보완 */
+const POST_WRITE_AGENT_PROMPT = [
+  '아래를 순서대로 수행하라.',
+  '',
+  '## 1. 입력 확인',
+  '`.harness/errors.log`와 `.harness/metrics.jsonl`를 읽어라.',
+  '최근 post-write 실행에서 감지된 오류가 없으면 변경 없이 종료하라.',
+  '',
+  '## 2. 자동 수정 원칙',
+  '- 타입 오류, lint 오류, import 위반 등 단순 오류는 즉시 수정한다.',
+  '- Solidity 보안 이슈(tx.origin, selfdestruct, delegatecall, floating pragma, reentrancy 가능성)는',
+  '  원인과 수정 계획을 먼저 정리하고, 사용자 확인이 필요한 경우에만 멈춘다.',
+  '- 수정 후에는 같은 오류가 남지 않도록 현재 파일과 연관 파일을 함께 점검한다.',
+  '',
+  '## 3. 출력',
+  '수정이 필요하면 간결하게 수정 내용을 설명하고, 추가 조치가 없으면 ok: true에 준하는 짧은 확인만 남긴다.',
+].join('\n');
+
 /** hook 경로 헬퍼 — 에이전트별 환경변수 또는 상대경로 */
 function hookCmd(agent: string, hookFile: string): string {
   const dir = HOOKS_DIR_MAP[agent];
   switch (agent) {
     case 'claude': return `\${CLAUDE_PROJECT_DIR}/${dir}/${hookFile}`;
     case 'gemini': return `$GEMINI_PROJECT_DIR/${dir}/${hookFile}`;
+    case 'codex': return `bash "$(git rev-parse --show-toplevel)/${dir}/${hookFile}"`;
     default: return `${dir}/${hookFile}`;
   }
 }
@@ -155,10 +174,12 @@ function generateCodexSettings(_projectDir: string) {
   const h = (f: string) => hookCmd('codex', f);
   return {
     PreToolUse: [
-      { matcher: 'Bash', hooks: [{ type: 'command', command: h('scope-guard.sh'), statusMessage: 'Checking file scope...', timeout: 30 }] },
+      { matcher: 'Bash|apply_patch', hooks: [{ type: 'command', command: h('scope-guard.sh'), statusMessage: 'Checking file scope...', timeout: 30 }] },
+      { matcher: 'apply_patch', hooks: [{ type: 'command', command: h('scaffold-guard.sh'), statusMessage: 'Checking scaffolder usage...', timeout: 30 }] },
     ],
     PostToolUse: [
-      { matcher: 'Bash', hooks: [{ type: 'command', command: h('post-write.sh'), statusMessage: 'Checking architecture rules...', timeout: 30 }] },
+      { matcher: 'Bash|apply_patch', hooks: [{ type: 'command', command: h('post-write.sh'), statusMessage: 'Checking architecture rules...', timeout: 30 }] },
+      { matcher: 'Bash|apply_patch', hooks: [{ type: 'agent', prompt: POST_WRITE_AGENT_PROMPT, timeout: 60 }] },
     ],
   };
 }

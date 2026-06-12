@@ -9,9 +9,20 @@ _metric() { mkdir -p "$PROJECT_DIR/.harness"; printf '{"ts":"%s","hook":"scaffol
 
 INPUT=$(cat)
 TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty')
-FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // empty')
+FILE_PATH=$(echo "$INPUT" | jq -r '
+  def patch_path:
+    capture("\\*\\*\\* (Add|Update|Delete) File: (?<path>[^\\n]+)")?.path // empty;
+  .tool_input.file_path //
+  .tool_input.path //
+  (.tool_input.patch // .tool_input.input // .tool_input | strings | patch_path) //
+  empty
+')
 
-if [ "$TOOL_NAME" != "Write" ] || [ -z "$FILE_PATH" ]; then
+if [ "$TOOL_NAME" != "Write" ] && [ "$TOOL_NAME" != "apply_patch" ]; then
+  exit 0
+fi
+
+if [ -z "$FILE_PATH" ]; then
   exit 0
 fi
 
