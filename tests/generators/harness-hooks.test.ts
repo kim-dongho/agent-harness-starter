@@ -53,7 +53,7 @@ describe('setupHarnessHooks — Gemini CLI', () => {
     const dir = await makeProject('gemini-matcher');
     await setupHarnessHooks(dir, 'gemini');
     const settings = await fs.readJson(path.join(dir, '.gemini/settings.json'));
-    expect(settings.hooks.BeforeTool[0].matcher).toBe('write_file|edit_file');
+    expect(settings.hooks.BeforeTool[0].matcher).toBe('write_file|replace');
   });
 });
 

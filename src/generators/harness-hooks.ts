@@ -105,7 +105,7 @@ function hookCmd(agent: string, hookFile: string): string {
   const dir = HOOKS_DIR_MAP[agent];
   switch (agent) {
     case 'claude': return `\${CLAUDE_PROJECT_DIR}/${dir}/${hookFile}`;
-    case 'gemini': return `\${GEMINI_PROJECT_DIR:-.}/${dir}/${hookFile}`;
+    case 'gemini': return `$GEMINI_PROJECT_DIR/${dir}/${hookFile}`;
     default: return `${dir}/${hookFile}`;
   }
 }
@@ -139,11 +139,11 @@ function generateGeminiSettings(_projectDir: string) {
   const h = (f: string) => hookCmd('gemini', f);
   return {
     BeforeTool: [
-      { matcher: 'write_file|edit_file', hooks: [{ name: 'scope-guard', type: 'command', command: h('scope-guard.sh') }] },
+      { matcher: 'write_file|replace', hooks: [{ name: 'scope-guard', type: 'command', command: h('scope-guard.sh') }] },
       { matcher: 'write_file', hooks: [{ name: 'scaffold-guard', type: 'command', command: h('scaffold-guard.sh') }] },
     ],
     AfterTool: [
-      { matcher: 'write_file|edit_file', hooks: [{ name: 'post-write', type: 'command', command: h('post-write.sh') }] },
+      { matcher: 'write_file|replace', hooks: [{ name: 'post-write', type: 'command', command: h('post-write.sh') }] },
     ],
     SessionStart: [
       { hooks: [{ name: 'session-init', type: 'command', command: h('session-init.sh') }] },

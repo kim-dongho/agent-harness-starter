@@ -27,16 +27,8 @@
   },
   "agent": {
     "persona": "senior-developer",
-    "allowedScopes": [
-      "src/**/*",
-      "tests/**/*",
-      "templates/**/*",
-      ".claude/**/*"
-    ],
-    "adapters": [
-      "claude",
-      "gemini"
-    ]
+    "allowedScopes": ["src/**/*", "tests/**/*"],
+    "adapters": ["claude", "gemini"]
   },
   "rules": {
     "fileNaming": {
