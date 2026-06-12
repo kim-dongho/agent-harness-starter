@@ -89,5 +89,61 @@ if [ -n "$SUGGESTION" ]; then
   exit 2
 fi
 
+# ── fileNaming 검증 — 새 파일의 이름이 config 규칙에 맞는지 확인 ──
+FILENAME=$(basename "$REL_PATH" | sed 's/\.[^.]*$//')
+EXT=$(basename "$REL_PATH" | grep -o '\.[^.]*$' || true)
+
+# 파일 타입 판별
+FILE_TYPE=""
+case "$REL_PATH" in
+  *components/*|*ui/*|*widgets/*|*presentation/*) FILE_TYPE="components" ;;
+  *hooks/*)     FILE_TYPE="hooks" ;;
+  *utils/*|*lib/*) FILE_TYPE="utils" ;;
+  *services/*|*api/*|*application/*) FILE_TYPE="services" ;;
+  *models/*|*domain/*|*entities/*) FILE_TYPE="models" ;;
+esac
+
+if [ -n "$FILE_TYPE" ]; then
+  NAMING_RULE=$(jq -r ".rules.fileNaming.${FILE_TYPE} // empty" "$CONFIG" 2>/dev/null)
+
+  if [ -n "$NAMING_RULE" ]; then
+    IS_VALID="yes"
+    SUGGESTED=""
+
+    case "$NAMING_RULE" in
+      kebab-case)
+        # kebab-case: 소문자 + 하이픈만 허용 (예: password-input)
+        if echo "$FILENAME" | grep -qE '[A-Z]|_'; then
+          IS_VALID="no"
+          SUGGESTED=$(echo "$FILENAME" | sed 's/\([A-Z]\)/-\L\1/g' | sed 's/^-//' | sed 's/_/-/g' | tr '[:upper:]' '[:lower:]')
+        fi
+        ;;
+      camelCase)
+        # camelCase: 첫 글자 소문자 + 하이픈/언더스코어 없음 (예: passwordInput)
+        if echo "$FILENAME" | grep -qE '^[A-Z]|[-_]'; then
+          IS_VALID="no"
+          # PascalCase → camelCase
+          SUGGESTED=$(echo "$FILENAME" | sed 's/^./\L&/' | sed 's/[-_]\(.\)/\U\1/g')
+        fi
+        ;;
+      PascalCase)
+        # PascalCase: 첫 글자 대문자 + 하이픈/언더스코어 없음 (예: PasswordInput)
+        if echo "$FILENAME" | grep -qE '^[a-z]|[-_]'; then
+          IS_VALID="no"
+          SUGGESTED=$(echo "$FILENAME" | sed 's/[-_]\(.\)/\U\1/g' | sed 's/^./\U&/')
+        fi
+        ;;
+    esac
+
+    if [ "$IS_VALID" = "no" ] && [ -n "$SUGGESTED" ]; then
+      _log "BLOCK (naming): $FILENAME → $SUGGESTED ($NAMING_RULE)"
+      _metric "block" "$REL_PATH"
+      echo "harness: 파일명 '$FILENAME$EXT'이 naming 규칙($NAMING_RULE)에 맞지 않습니다." >&2
+      echo "  → '$SUGGESTED$EXT'로 변경하세요." >&2
+      exit 2
+    fi
+  fi
+fi
+
 _log "ALLOW: $REL_PATH"
 exit 0
