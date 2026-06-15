@@ -161,6 +161,9 @@ async function scaffoldFrontendArchitecture(srcDir: string, arch: string): Promi
       // Feature-Sliced Design
       // FSD 레이어 폴더만 추가 — CLI가 만든 기본 파일은 유지
       const layers = ['app', 'pages', 'widgets', 'features', 'entities', 'shared'];
+      for (const layer of layers) {
+        await fs.ensureDir(path.join(srcDir, layer));
+      }
       // shared 하위 구조
       for (const sub of ['ui', 'lib', 'api', 'config', 'types']) {
         await fs.ensureDir(path.join(srcDir, 'shared', sub));
