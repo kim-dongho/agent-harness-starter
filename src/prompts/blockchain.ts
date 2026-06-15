@@ -1,27 +1,15 @@
 /**
  * @fileoverview 블록체인 스택 세부 프롬프트
  *
- * 블록체인 네트워크 선택 등 블록체인에 특화된 옵션을 수집한다.
+ * 현재 블록체인 스택은 별도 세부 옵션 없음.
+ * 네트워크 설정은 사용자가 직접 config 파일에서 설정.
  */
-import * as p from '@clack/prompts';
-import { BLOCKCHAIN_NETWORKS } from '../constants.js';
-import { cancelled } from './common.js';
 import type { UserChoices } from './types.js';
 
 /**
  * 블록체인 스택 세부 옵션을 프롬프트로 수집한다.
- *
- * @param choices - 기존 선택 결과
- * @returns 네트워크 옵션이 추가된 선택 결과 또는 취소 시 null
+ * 현재는 별도 옵션 없이 바로 반환.
  */
 export async function promptBlockchain(choices: UserChoices): Promise<UserChoices | null> {
-  const networks = BLOCKCHAIN_NETWORKS[choices.stack] ?? BLOCKCHAIN_NETWORKS['solidity-hardhat'];
-  const network = await p.select({
-    message: '네트워크를 선택하세요',
-    options: networks.map((n) => ({ value: n.value, label: n.label })),
-  });
-  if (cancelled(network)) return null;
-  choices.network = network as string;
-
   return choices;
 }

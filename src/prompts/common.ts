@@ -224,12 +224,18 @@ async function promptMonorepoStacks(
     const jstsStacks = stacks.filter((s) => !NON_JS_STACKS.includes(s));
     const allTsOnly = jstsStacks.every((s) => TS_ONLY_STACKS.includes(s));
 
+    // TS 강제 스택이 섞여있으면 안내
+    const hasTsOnly = jstsStacks.some((s) => TS_ONLY_STACKS.includes(s));
+
     if (allTsOnly) {
       language = 'typescript';
       p.log.info('선택한 스택은 TypeScript만 지원합니다.');
     } else {
+      const tsNote = hasTsOnly
+        ? ` (${jstsStacks.filter(s => TS_ONLY_STACKS.includes(s)).join(', ')}은 TS 고정)`
+        : '';
       const lang = await p.select({
-        message: '언어를 선택하세요 (JS/TS 스택 공통)',
+        message: `언어를 선택하세요 (JS/TS 스택 공통)${tsNote}`,
         options: LANGUAGES.map((l) => ({ value: l.value, label: l.label })),
       });
       if (cancelled(lang)) return null;
