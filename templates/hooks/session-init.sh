@@ -78,10 +78,17 @@ echo "5. /start <이슈번호> → 이슈 기반 작업 시작"
 echo "6. /done    → 품질 게이트 + 커밋 + MR"
 echo ""
 
-PLAN="no"; GLOSSARY_EXISTS="no"; DESIGN="no"
-[ -f "$PROJECT_DIR/docs/plan.json" ] && PLAN="yes"
-[ -f "$PROJECT_DIR/domain-glossary.json" ] && GLOSSARY_EXISTS="yes"
-[ -d "$PROJECT_DIR/docs/designs" ] && [ "$(ls -A "$PROJECT_DIR/docs/designs" 2>/dev/null)" ] && DESIGN="yes"
+# SDLC 상태 — docs/features/ 기반
+FEATURES_DIR="$PROJECT_DIR/docs/features"
+FEATURE_COUNT=0; PLAN_COUNT=0; DESIGN_COUNT=0
+if [ -d "$FEATURES_DIR" ]; then
+  for fd in "$FEATURES_DIR"/*/; do
+    [ -d "$fd" ] || continue
+    FEATURE_COUNT=$((FEATURE_COUNT + 1))
+    [ -f "${fd}plan.json" ] && PLAN_COUNT=$((PLAN_COUNT + 1))
+    [ -f "${fd}design.md" ] && DESIGN_COUNT=$((DESIGN_COUNT + 1))
+  done
+fi
 
 # Learnings
 LEARNINGS="$PROJECT_DIR/.harness/learnings.json"
@@ -137,16 +144,10 @@ if [ -f "$LEARNINGS" ]; then
 fi
 
 echo ""
-echo "Status: Plan=$PLAN | Glossary=$GLOSSARY_EXISTS | Design=$DESIGN"
-
-if [ "$PLAN" = "no" ]; then
-  echo "→ Next: /plan"
-elif [ "$GLOSSARY_EXISTS" = "no" ]; then
-  echo "→ Next: /analyze"
-elif [ "$DESIGN" = "no" ]; then
-  echo "→ Next: /design"
+if [ "$FEATURE_COUNT" -gt 0 ]; then
+  echo "Features: ${FEATURE_COUNT}개 | Plan: ${PLAN_COUNT} | Design: ${DESIGN_COUNT}"
 else
-  echo "→ Ready: /generate 또는 /start 로 구현 시작"
+  echo "→ /plan <기능명> 으로 시작하세요"
 fi
 
 echo ""
