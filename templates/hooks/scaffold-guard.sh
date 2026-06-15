@@ -43,7 +43,16 @@ if [ ! -f "$CONFIG" ]; then
   exit 0
 fi
 
-ARCH=$(jq -r '.architecture.style // "flat"' "$CONFIG" 2>/dev/null)
+# 아키텍처 — 문자열이면 그대로, 맵(모노레포)이면 파일 경로에서 앱 디렉토리명으로 조회
+APP_DIR=$(echo "$REL_PATH" | sed -n 's|^apps/\([^/]*\)/.*|\1|p')
+if [ -n "$APP_DIR" ]; then
+  # 모노레포: apps/web/... → .architecture.style.web
+  ARCH=$(jq -r ".architecture.style.\"${APP_DIR}\" // .architecture.style // \"flat\"" "$CONFIG" 2>/dev/null)
+else
+  ARCH=$(jq -r '.architecture.style // "flat"' "$CONFIG" 2>/dev/null)
+fi
+# 맵 전체가 반환된 경우 flat으로 폴백
+if echo "$ARCH" | grep -q '{'; then ARCH="flat"; fi
 
 # 공통 scaffoldable 디렉토리 (모든 아키텍처)
 SUGGESTION=""
