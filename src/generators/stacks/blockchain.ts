@@ -21,15 +21,30 @@ export async function setupSolidityHardhat(dir: string): Promise<void> {
 
   await fs.writeJson(path.join(dir, 'package.json'), {
     name: path.basename(dir), version: '0.1.0',
-    scripts: { compile: 'hardhat compile', test: 'hardhat test', deploy: 'hardhat run scripts/deploy.ts' },
+    scripts: { compile: 'hardhat compile', test: 'hardhat test', deploy: 'hardhat run scripts/deploy.js', build: 'echo "No build step"', dev: 'echo "No dev step"' },
     devDependencies: { hardhat: '^2.22.0', '@nomicfoundation/hardhat-toolbox': '^5' },
   }, { spaces: 2 });
 
-  await fs.writeFile(path.join(dir, 'hardhat.config.ts'), `import { HardhatUserConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-toolbox";
+  await fs.writeFile(path.join(dir, 'hardhat.config.js'), `require("@nomicfoundation/hardhat-toolbox");
 
-const config: HardhatUserConfig = { solidity: "0.8.24" };
-export default config;
+/** @type import('hardhat/config').HardhatUserConfig */
+module.exports = { solidity: "0.8.24" };
+`);
+
+  await fs.writeFile(path.join(dir, 'scripts/deploy.js'), `const { ethers } = require("hardhat");
+
+async function main() {
+  const Lock = await ethers.getContractFactory("Lock");
+  const unlockTime = Math.floor(Date.now() / 1000) + 60;
+  const lock = await Lock.deploy(unlockTime, { value: ethers.parseEther("0.001") });
+  await lock.waitForDeployment();
+  console.log("Lock deployed to:", await lock.getAddress());
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
 `);
 
   await fs.writeFile(path.join(dir, 'contracts/Lock.sol'), `// SPDX-License-Identifier: MIT
