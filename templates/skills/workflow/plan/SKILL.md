@@ -1,60 +1,54 @@
 ---
-description: 기능 계획 수립. `/plan` 으로 호출하면 프로젝트를 스캔하고 기능, 우선순위, 마일스톤을 정의한다.
+description: 기능 계획 수립. `/plan <기능명>` 으로 호출하면 프로젝트를 스캔하고 해당 기능의 계획을 수립한다.
 ---
 
 ## /plan 워크플로우
 
-`/plan` 으로 호출한다. 프로젝트 컨텍스트를 분석하여 구현 계획을 수립한다.
+`/plan <기능명>` 으로 호출한다. 기능별 폴더에 계획을 생성한다.
+
+### 사용법
+
+```
+/plan login        → docs/features/login/plan.json
+/plan dashboard    → docs/features/dashboard/plan.json
+```
 
 ### 1. 프로젝트 스캔
 
 아래 파일들을 읽고 현재 상태를 파악한다:
-- `harness.config.json` — 프로젝트 설정
-- `package.json` — 의존성, 스크립트
-- `README.md` — 프로젝트 개요
-- `src/` — 현재 구현된 코드 구조
+- `harness.config.json` — 프로젝트 설정 (아키텍처, 스택)
+- `package.json` — 의존성
+- 현재 구현된 코드 구조
 
 ### 2. 기능 정의
 
-사용자와 함께 기능 목록을 정의한다:
+사용자와 함께 기능을 정의한다:
 
 ```json
 {
-  "goals": ["프로젝트의 핵심 목표"],
-  "features": [
-    {
-      "name": "기능명",
-      "description": "설명",
-      "priority": "high | medium | low",
-      "status": "planned | in-progress | done"
-    }
-  ],
-  "milestones": [
-    {
-      "name": "v1.0",
-      "targetDate": "2026-07-01",
-      "features": ["기능명1", "기능명2"]
-    }
+  "feature": "login",
+  "description": "로그인 페이지 구현",
+  "priority": "high",
+  "tasks": [
+    { "name": "로그인 폼 UI", "layer": "features/auth", "status": "planned" },
+    { "name": "인증 API 연동", "layer": "shared/api", "status": "planned" },
+    { "name": "테스트", "layer": "tests", "status": "planned" }
   ]
 }
 ```
 
 ### 3. 산출물
 
-- `docs/plan.json` — 구조화된 계획 데이터
-- `docs/plan.md` — 사람이 읽을 수 있는 계획 문서
+```
+docs/features/<기능명>/
+├── plan.json      ← 구조화된 계획
+└── plan.md        ← 사람이 읽을 수 있는 문서
+```
 
-### 4. Plan Review
+### 4. 기능 완료 후
 
-계획 수립 후 서브에이전트(reviewer)에게 리뷰를 요청한다:
-
-- 기능 간 의존성 충돌이 없는지
-- 우선순위가 합리적인지
-- 누락된 기능이 없는지
-- 마일스톤 일정이 현실적인지
-
-리뷰 결과를 `docs/plan-review.md`에 기록한다. 문제가 있으면 계획을 수정한 후 다시 리뷰한다.
+`/done` 실행 시 해당 기능의 `plan.json`에 `status: "done"`으로 업데이트된다.
 
 ### 5. 다음 단계
 
-리뷰 통과 후 → `/analyze` 로 도메인 분석을 진행한다.
+계획 수립 후 → `/analyze <기능명>` 으로 도메인 분석을 진행한다.
