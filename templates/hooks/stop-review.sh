@@ -100,7 +100,45 @@ if [ -n "$CHANGED" ]; then
   fi
 fi
 
-# 5. 에러 있으면 errors.log에 축적
+# 5. 테스트 파일 존재 여부 체크 (requireTestFileWithImplementation이 true일 때)
+REQUIRE_TEST=$(jq -r '.testing.requireTestFileWithImplementation // false' "$CONFIG" 2>/dev/null)
+if [ "$REQUIRE_TEST" = "true" ] && [ -n "$CHANGED" ]; then
+  TEST_SUFFIX=$(jq -r '.rules.fileNaming.testSuffix // ".test"' "$CONFIG" 2>/dev/null)
+  MISSING_TESTS=""
+  while IFS= read -r file; do
+    # 테스트 불필요 파일 제외
+    case "$file" in
+      # 테스트 파일 자체
+      *"${TEST_SUFFIX}"*) continue ;;
+      # 설정/메타 파일
+      *.config.*|*/index.*|*.json|*.md|*.sh|*.yml|*.yaml|*.toml|*.css|*.scss) continue ;;
+      # FE: 페이지, 레이아웃, UI 컴포넌트 — 통합/E2E로 테스트
+      */page.*|*/layout.*|*/loading.*|*/error.*|*/not-found.*) continue ;;
+      */components/*|*/ui/*) continue ;;
+      # BE: DTO, types, interfaces
+      */dto/*|*/dtos/*|*/types/*|*/interfaces/*) continue ;;
+      # Blockchain: deploy 스크립트
+      */scripts/*) continue ;;
+    esac
+    # 테스트 대상 파일만 (.ts/.tsx/.js/.jsx)
+    case "$file" in
+      *.ts|*.tsx|*.js|*.jsx) ;;
+      *) continue ;;
+    esac
+    # 테스트 파일 경로 추정
+    BASE=$(echo "$file" | sed "s/\.[^.]*$/${TEST_SUFFIX}&/")
+    if [ ! -f "$PROJECT_DIR/$BASE" ]; then
+      MISSING_TESTS="$MISSING_TESTS\n  $file → $BASE"
+    fi
+  done <<< "$CHANGED"
+
+  if [ -n "$MISSING_TESTS" ]; then
+    CONTEXT="$CONTEXT\n⚠️ 테스트 파일 누락:$MISSING_TESTS"
+    HAS_ERRORS=true
+  fi
+fi
+
+# 6. 에러 있으면 errors.log에 축적
 if [ "$HAS_ERRORS" = true ]; then
   mkdir -p "$PROJECT_DIR/.harness"
   printf -- "--- %s ---\n%b\n\n" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$CONTEXT" >> "$PROJECT_DIR/.harness/errors.log"

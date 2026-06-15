@@ -16,10 +16,12 @@ description: 파일 생성. `/generate <type> <name>` 으로 호출하면 아키
 /generate model User
 ```
 
-### 생성 후 자동 처리
+### barrel export 규칙
 
-1. **barrel export** — 디렉토리의 `index.ts`에 자동 추가
-2. **생성 후 Edit** — 생성된 파일을 수정하여 구현 코드를 작성한다
+- **FSD**: slice별 1개만 (`features/auth/index.ts`). 레이어 전체 barrel(`features/index.ts`)이나 segment barrel(`features/auth/ui/index.ts`)은 만들지 않는다.
+- **기타 아키텍처**: 디렉토리별 1개 (`components/index.ts`, `hooks/index.ts`)
+
+불필요한 index.ts를 만들지 않는다. 실제로 re-export가 필요한 곳에만 생성한다.
 
 ### 주의사항
 

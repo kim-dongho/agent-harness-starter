@@ -6,6 +6,30 @@
 import type { AgentAdapter, HarnessConfig, AdapterOutput } from '../types.js';
 import { buildFullContent, buildProjectContext, buildConventionRules, buildCodingPrinciples, buildCodingStandards, buildWorkflowRules } from '../builders.js';
 
+/** 스택 룰 디렉토리 → 조건부 로딩 paths 매핑 */
+function getStackPaths(dir: string): string[] | null {
+  const map: Record<string, string[]> = {
+    react: ['**/*.{tsx,jsx}'],
+    nextjs: ['**/app/**/*', '**/pages/**/*'],
+    vue: ['**/*.vue', '**/*.{ts,js}'],
+    svelte: ['**/*.svelte', '**/*.{ts,js}'],
+    angular: ['**/*.{ts,html}'],
+    go: ['**/*.go'],
+    java: ['**/*.java'],
+    python: ['**/*.py'],
+    rust: ['**/*.rs'],
+    kotlin: ['**/*.kt'],
+    dotnet: ['**/*.cs'],
+    solidity: ['**/*.sol'],
+    solana: ['**/*.rs', '**/programs/**/*'],
+    move: ['**/*.move'],
+    ton: ['**/*.tact'],
+    cosmwasm: ['**/*.rs'],
+    'general-ts': ['**/*.{ts,tsx,js,jsx}'],
+  };
+  return map[dir] ?? null;
+}
+
 export const claudeAdapter: AgentAdapter = {
   name: 'Claude Code',
   type: 'claude',
@@ -46,16 +70,17 @@ export const claudeAdapter: AgentAdapter = {
       content: buildWorkflowRules(config),
     });
 
-    // .claude/rules/stack/{name}.md — 스택별 규칙 분리
+    // .claude/rules/stack/{name}.md — 스택별 규칙 분리 + paths frontmatter
     if (stackRulesByDir && Object.keys(stackRulesByDir).length > 0) {
       for (const [dir, content] of Object.entries(stackRulesByDir)) {
+        const paths = getStackPaths(dir);
+        const frontmatter = paths ? `---\npaths:\n${paths.map(p => `  - "${p}"`).join('\n')}\n---\n\n` : '';
         files.push({
           path: `.claude/rules/stack/${dir}.md`,
-          content,
+          content: frontmatter + content,
         });
       }
     } else if (stackRules) {
-      // fallback: 분리 데이터 없으면 하나로
       files.push({
         path: '.claude/rules/stack.md',
         content: stackRules,

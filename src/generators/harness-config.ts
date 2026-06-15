@@ -64,19 +64,26 @@ function toFramework(stack: string): string {
     'nextjs-app': 'nextjs', 'nextjs-pages': 'nextjs',
     'react-vite': 'vite-react', 'vue-vite': 'vite-vue',
     'nuxt': 'nuxt', 'sveltekit': 'svelte', 'remix': 'remix',
-    'angular': 'unknown', 'astro': 'astro',
+    'angular': 'angular', 'astro': 'astro',
     'node-express': 'express', 'node-nestjs': 'nest', 'node-fastify': 'fastify',
-    'node-hono': 'unknown',
+    'node-hono': 'hono',
+    'go-gin': 'gin', 'go-fiber': 'fiber', 'go-echo': 'echo',
+    'java-spring': 'spring',
+    'python-fastapi': 'fastapi', 'python-django': 'django', 'python-flask': 'flask',
+    'rust-axum': 'axum', 'rust-actix': 'actix',
+    'kotlin-ktor': 'ktor', 'dotnet': 'dotnet',
+    'solidity-hardhat': 'hardhat', 'solidity-foundry': 'foundry',
+    'solana-anchor': 'anchor', 'move-sui': 'sui',
   };
-  return map[stack] ?? 'unknown';
+  return map[stack] ?? stack;
 }
 
 /** 아키텍처 → harness style 매핑 */
 function toArchStyle(arch?: string): string {
   const map: Record<string, string> = {
-    'fsd': 'fsd', 'atomic': 'custom', 'colocation': 'modular', 'flat': 'flat',
-    'layered': 'modular', 'clean': 'clean', 'ddd': 'custom', 'modular': 'modular',
-    'clean-mobile': 'clean', 'mvvm': 'custom', 'feature-first': 'modular',
+    'fsd': 'fsd', 'atomic': 'atomic', 'colocation': 'colocation', 'flat': 'flat',
+    'layered': 'layered', 'clean': 'clean', 'ddd': 'ddd', 'modular': 'modular',
+    'clean-mobile': 'clean', 'mvvm': 'mvvm', 'feature-first': 'feature-first',
   };
   return map[arch ?? ''] ?? 'modular';
 }

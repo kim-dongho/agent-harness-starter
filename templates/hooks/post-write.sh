@@ -53,6 +53,14 @@ esac
 
 CONTEXT=""
 
+# 0. Auto-format — 파일 수정 후 자동 포맷팅 (포맷터가 설치된 경우에만)
+FORMATTER=$(jq -r '.development.formatter // "none"' "$CONFIG")
+case "$FORMATTER" in
+  biome)  command -v npx &>/dev/null && npx biome format --write "$FILE_PATH" &>/dev/null || true ;;
+  prettier) command -v npx &>/dev/null && npx prettier --write "$FILE_PATH" &>/dev/null || true ;;
+  *) ;;
+esac
+
 # 1. Lint 검사
 LINTER=$(jq -r '.development.linter // "none"' "$CONFIG")
 case "$LINTER" in
