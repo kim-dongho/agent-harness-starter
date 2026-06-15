@@ -9,6 +9,12 @@ if [ ! -f "$CONFIG" ]; then
   exit 0
 fi
 
+# 파일 변경이 없으면 리뷰 불필요 — 분석/계획만 한 경우 스킵
+CHANGED_COUNT=$(git diff --name-only HEAD 2>/dev/null | wc -l | tr -d ' ')
+if [ "$CHANGED_COUNT" = "0" ]; then
+  exit 0
+fi
+
 CONTEXT=""
 HAS_ERRORS=false
 

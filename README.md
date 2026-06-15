@@ -168,6 +168,59 @@ npx @frontend-playground/agent-harness-starter@latest init  # 두 번째: Gemini
 
 ---
 
+## SDLC 워크플로우
+
+하네스에 내장된 스킬로 이슈 기반 개발 파이프라인을 자동화합니다.
+
+```
+/plan <기능명>    → 기능 정의, 우선순위, 마일스톤
+/analyze <기능명> → 도메인 용어집 + 기능 스펙
+/design <기능명>  → 인터페이스, API 계약, 컴포넌트 구조
+/generate <type>  → 파일 생성 (직접 Write 금지)
+/start <이슈번호> → 이슈 조회 → 브랜치 → Figma 분석 → 구현 계획
+/done             → 품질 게이트 5단계 → 커밋 → push → MR 생성
+```
+
+### `/start` 워크플로우
+
+이슈 번호를 주면 자동으로:
+
+1. **이슈 조회** — Jira API로 제목/설명/타입 가져오기
+2. **티켓 검증** — 필수 항목(수락 기준, Figma 링크 등) 체크
+3. **Figma 분석** — 기획(와이어프레임) + 디자인(시안) MCP로 읽기
+4. **브랜치 생성** — 이슈 타입에 따라 `feature/`, `fix/` 등 자동 prefix
+5. **변경 대상 분석** — 코드베이스 탐색 + 복잡도 판단
+6. **구현 계획** — 단계별 계획 제시 (HIGH면 사용자 확인 후 진행)
+
+### `/done` 품질 게이트
+
+| Gate | 검증 항목 |
+|------|----------|
+| 1. 코드 품질 | lint + type-check |
+| 2. 테스트 | 테스트 실행 (실패 시 3회 self-heal 루프) |
+| 3. 정책 보호 | 정책 키워드(금액, 상태 전이 등) 변경 시 테스트 존재 확인 |
+| 4. 범위 검증 | 의도하지 않은 파일 변경 없는지 확인 |
+| 5. 컨벤션 | 커밋 메시지 + 불필요 파일(.env 등) 제외 |
+
+5단계 모두 통과 → 커밋 → push → GitLab MR 자동 생성
+
+### 외부 서비스 연동
+
+프로젝트 루트의 `.env`에 설정합니다 (`.env.example` 참고).
+
+| 서비스 | 환경변수 | 용도 |
+|--------|---------|------|
+| Jira Cloud | `JIRA_BASE_URL`, `JIRA_USER_EMAIL`, `JIRA_API_TOKEN` | `/start` 이슈 조회 + 상태 변경 |
+| GitLab | `GITLAB_URL`, `GITLAB_TOKEN` | `/done` MR 생성 |
+| GitLab 프로젝트 | `GITLAB_PROJECT_ID` (선택) | git remote에서 자동 감지, 실패 시 fallback |
+| Figma | MCP 연동 | `/start`에서 기획/디자인 링크 자동 분석 |
+
+> **GitLab 프로젝트 감지**: `git remote get-url origin`에서 `group/project` 경로를 자동 추출합니다 (SSH/HTTPS 둘 다 지원). remote가 없는 경우 `.env`의 `GITLAB_PROJECT_ID`를 사용합니다.
+
+> **Jira Cloud**: Scoped API Token(ATATT)은 `api.atlassian.com/ex/jira/{cloudId}/rest/api/3/` 경로에서만 동작합니다. session-init에서 `.env`를 자동 로드합니다.
+
+---
+
 ## Hook System
 
 모든 에이전트가 동일한 hook 스크립트를 사용합니다. 설정 파일 포맷만 에이전트별로 다릅니다.
@@ -272,11 +325,12 @@ first-pass 성공:     18/28 (64%)
 ```
 my-project/
 ├── harness.config.json          # 하네스 설정 (single source of truth)
+├── .env.example                 # 환경변수 템플릿 (Jira, GitLab 등)
 ├── .claude/                     # Claude Code 선택 시
 │   ├── settings.json            #   hook 등록
 │   ├── hooks/                   #   hook 스크립트 7개
 │   ├── rules/                   #   룰 파일
-│   └── skills/                  #   스킬 (code-review, metrics 등)
+│   └── skills/                  #   스킬 (workflow, metrics 등)
 ├── .gemini/                     # Gemini CLI 선택 시
 │   ├── settings.json
 │   ├── hooks/
@@ -285,6 +339,13 @@ my-project/
 │   ├── metrics.jsonl            #   메트릭 이벤트 로그
 │   ├── learnings.json           #   자동 학습 규칙
 │   └── errors.log               #   에러 로그
+├── docs/features/               # SDLC 산출물
+│   └── <기능명>/
+│       ├── plan.json            #   /plan 산출물
+│       ├── plan.md
+│       ├── glossary.json        #   /analyze 산출물
+│       ├── spec.md
+│       └── design.md            #   /design 산출물
 └── GEMINI.md                    # Gemini 룰 파일 (루트, 에이전트 규약)
 ```
 
