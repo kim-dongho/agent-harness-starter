@@ -29,10 +29,15 @@ import type { UserChoices } from './types.js';
  */
 export async function promptFrontend(choices: UserChoices): Promise<UserChoices | null> {
   // 모노레포에서 이미 설정된 공통 옵션은 스킵
+  const TS_ONLY_STACKS = ['nuxt', 'sveltekit', 'angular', 'remix'];
   if (!choices.language) {
-    const language = await promptLanguage();
-    if (language === null) return null;
-    choices.language = language;
+    if (TS_ONLY_STACKS.includes(choices.stack)) {
+      choices.language = 'typescript';
+    } else {
+      const language = await promptLanguage();
+      if (language === null) return null;
+      choices.language = language;
+    }
   }
 
   const architecture = await p.select({
@@ -88,15 +93,26 @@ export async function promptFrontend(choices: UserChoices): Promise<UserChoices 
     if (s.value === 'pinia') return isVue;
     if (s.value === 'ngrx') return isAngular;
     if (['redux-toolkit', 'zustand', 'jotai', 'react-query', 'swr'].includes(s.value)) return isReact;
-    return true;
+    return false;
   });
-  const stateManagement = await p.multiselect({
-    message: '상태관리를 선택하세요 (space로 복수 선택)',
-    options: stateOptions.map((s) => ({ value: s.value, label: s.label })),
-    required: false,
-  });
-  if (cancelled(stateManagement)) return null;
-  choices.stateManagement = (stateManagement as string[]).join(',');
+  if (stateOptions.length > 1) {
+    // 복수 선택
+    const stateManagement = await p.multiselect({
+      message: '상태관리를 선택하세요 (space로 복수 선택)',
+      options: [...stateOptions.map((s) => ({ value: s.value, label: s.label })), { value: 'none', label: 'None' }],
+      required: true,
+    });
+    if (cancelled(stateManagement)) return null;
+    choices.stateManagement = (stateManagement as string[]).filter(v => v !== 'none').join(',');
+  } else if (stateOptions.length === 1) {
+    // 단일 선택
+    const stateManagement = await p.select({
+      message: '상태관리를 선택하세요',
+      options: [...stateOptions.map((s) => ({ value: s.value, label: s.label })), { value: 'none', label: 'None' }],
+    });
+    if (cancelled(stateManagement)) return null;
+    choices.stateManagement = stateManagement === 'none' ? '' : stateManagement as string;
+  }
 
   const testFramework = await p.select({
     message: '테스트 프레임워크를 선택하세요',
@@ -108,27 +124,34 @@ export async function promptFrontend(choices: UserChoices): Promise<UserChoices 
   const formOptions = FE_FORM_LIBRARIES.filter((f) => {
     if (f.value === 'vee-validate') return isVue;
     if (['react-hook-form', 'formik'].includes(f.value)) return isReact;
-    return true;
+    if (f.value === 'none') return true;
+    return false;
   });
-  const formLibrary = await p.select({
-    message: '폼 라이브러리를 선택하세요',
-    options: formOptions.map((f) => ({ value: f.value, label: f.label })),
-  });
-  if (cancelled(formLibrary)) return null;
-  choices.formLibrary = formLibrary as string;
+  // none만 남으면 스킵
+  if (formOptions.length > 1) {
+    const formLibrary = await p.select({
+      message: '폼 라이브러리를 선택하세요',
+      options: formOptions.map((f) => ({ value: f.value, label: f.label })),
+    });
+    if (cancelled(formLibrary)) return null;
+    choices.formLibrary = formLibrary as string;
+  }
 
   const i18nOptions = FE_I18N.filter((i) => {
     if (i.value === 'next-intl') return choices.stack === 'nextjs-app';
     if (i.value === 'react-i18next') return isReact;
     if (i.value === 'vue-i18n') return isVue;
-    return true;
+    if (i.value === 'none') return true;
+    return false;
   });
-  const i18n = await p.select({
-    message: 'i18n을 선택하세요',
-    options: i18nOptions.map((i) => ({ value: i.value, label: i.label })),
-  });
-  if (cancelled(i18n)) return null;
-  choices.i18n = i18n as string;
+  if (i18nOptions.length > 1) {
+    const i18n = await p.select({
+      message: 'i18n을 선택하세요',
+      options: i18nOptions.map((i) => ({ value: i.value, label: i.label })),
+    });
+    if (cancelled(i18n)) return null;
+    choices.i18n = i18n as string;
+  }
 
   return choices;
 }

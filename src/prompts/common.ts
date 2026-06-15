@@ -219,12 +219,22 @@ async function promptMonorepoStacks(
   if (hasJsTs) {
     p.log.step('모노레포 공통 설정');
 
-    const lang = await p.select({
-      message: '언어를 선택하세요 (JS/TS 스택 공통)',
-      options: LANGUAGES.map((l) => ({ value: l.value, label: l.label })),
-    });
-    if (cancelled(lang)) return null;
-    language = lang as string;
+    // TS 강제 스택 — JS 선택 불가
+    const TS_ONLY_STACKS = ['nuxt', 'sveltekit', 'angular', 'remix'];
+    const jstsStacks = stacks.filter((s) => !NON_JS_STACKS.includes(s));
+    const allTsOnly = jstsStacks.every((s) => TS_ONLY_STACKS.includes(s));
+
+    if (allTsOnly) {
+      language = 'typescript';
+      p.log.info('선택한 스택은 TypeScript만 지원합니다.');
+    } else {
+      const lang = await p.select({
+        message: '언어를 선택하세요 (JS/TS 스택 공통)',
+        options: LANGUAGES.map((l) => ({ value: l.value, label: l.label })),
+      });
+      if (cancelled(lang)) return null;
+      language = lang as string;
+    }
 
     const pm = await p.select({
       message: '패키지 매니저를 선택하세요 (루트 공통)',
