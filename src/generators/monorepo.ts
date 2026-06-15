@@ -49,89 +49,12 @@ export async function setupMonorepoSharedPackages(
     await fs.writeFile(path.join(projectDir, '.npmrc'), 'auto-install-peers=true\n');
   }
 
-  // TypeScript 선택 시 공유 tsconfig 생성
-  if (language === 'typescript') {
-    await setupSharedTsConfig(projectDir);
-  }
-
   // 린터 선택에 따라 공유 설정 생성
   if (linter === 'eslint-prettier') {
     await setupSharedEslint(projectDir);
   } else if (linter === 'biome') {
     await setupSharedBiome(projectDir);
   }
-}
-
-// ─── 공유 TypeScript 설정 ───
-
-async function setupSharedTsConfig(projectDir: string): Promise<void> {
-  const pkgDir = path.join(projectDir, 'packages', 'typescript-config');
-  await fs.ensureDir(pkgDir);
-
-  await fs.writeJson(path.join(pkgDir, 'package.json'), {
-    name: '@repo/typescript-config',
-    version: '0.0.0',
-    private: true,
-    files: ['*.json'],
-  }, { spaces: 2 });
-
-  // base.json
-  await fs.writeJson(path.join(pkgDir, 'base.json'), {
-    $schema: 'https://json.schemastore.org/tsconfig',
-    compilerOptions: {
-      strict: true,
-      esModuleInterop: true,
-      skipLibCheck: true,
-      forceConsistentCasingInFileNames: true,
-      moduleResolution: 'bundler',
-      resolveJsonModule: true,
-      isolatedModules: true,
-      incremental: true,
-      declaration: true,
-      declarationMap: true,
-      sourceMap: true,
-    },
-    exclude: ['node_modules'],
-  }, { spaces: 2 });
-
-  // nextjs.json
-  await fs.writeJson(path.join(pkgDir, 'nextjs.json'), {
-    $schema: 'https://json.schemastore.org/tsconfig',
-    extends: './base.json',
-    compilerOptions: {
-      target: 'ES2017',
-      lib: ['dom', 'dom.iterable', 'esnext'],
-      allowJs: true,
-      noEmit: true,
-      module: 'esnext',
-      jsx: 'preserve',
-      plugins: [{ name: 'next' }],
-    },
-  }, { spaces: 2 });
-
-  // react.json
-  await fs.writeJson(path.join(pkgDir, 'react.json'), {
-    $schema: 'https://json.schemastore.org/tsconfig',
-    extends: './base.json',
-    compilerOptions: {
-      target: 'ES2020',
-      lib: ['ES2020', 'DOM', 'DOM.Iterable'],
-      module: 'ESNext',
-      jsx: 'react-jsx',
-    },
-  }, { spaces: 2 });
-
-  // node.json
-  await fs.writeJson(path.join(pkgDir, 'node.json'), {
-    $schema: 'https://json.schemastore.org/tsconfig',
-    extends: './base.json',
-    compilerOptions: {
-      target: 'ES2022',
-      module: 'ES2022',
-      lib: ['ES2022'],
-      outDir: 'dist',
-    },
-  }, { spaces: 2 });
 }
 
 // ─── 공유 ESLint + Prettier 설정 ───
