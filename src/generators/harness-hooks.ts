@@ -50,6 +50,10 @@ async function copyHookScripts(projectDir: string, agent: string): Promise<numbe
 const STOP_AGENT_PROMPT = [
   '아래를 순서대로 수행하라.',
   '',
+  '## 사전 조건',
+  '`git diff --name-only HEAD`를 실행하여 변경된 파일이 있는지 확인한다.',
+  '변경된 파일이 없으면 "변경 없음 — 리뷰 스킵" 을 출력하고 ok: true를 반환하라. 이후 단계를 실행하지 않는다.',
+  '',
   '## 0. 무한 루프 방지',
   '`.harness/review-count` 파일을 읽어라. 숫자가 3 이상이면 "리뷰 3회 초과 — 스킵합니다"를 출력하고 ok: true를 반환하라.',
   '파일이 없으면 0으로 간주한다. 리뷰 실행 후 숫자를 +1하여 저장한다.',
