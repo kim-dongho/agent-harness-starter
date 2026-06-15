@@ -133,6 +133,23 @@ function getDefaultTestRunner(config: { stack: string; testFramework?: string })
   return defaults[config.stack] ?? 'vitest';
 }
 
+/** 스택 → 앱 디렉토리명 매핑 */
+function toAppDir(stack: string): string {
+  const map: Record<string, string> = {
+    'nextjs-app': 'web', 'nextjs-pages': 'web', 'react-vite': 'web',
+    'vue-vite': 'web', 'nuxt': 'web', 'sveltekit': 'web', 'angular': 'web',
+    'remix': 'web',
+    'go-gin': 'api', 'go-fiber': 'api', 'go-echo': 'api',
+    'java-spring': 'api', 'kotlin-ktor': 'api', 'dotnet': 'api',
+    'python-fastapi': 'api', 'python-django': 'api', 'python-flask': 'api',
+    'node-express': 'api', 'node-nestjs': 'api',
+    'rust-axum': 'api', 'rust-actix': 'api',
+    'solidity-hardhat': 'contracts', 'solidity-foundry': 'contracts',
+    'solana-anchor': 'contracts', 'move-sui': 'contracts',
+  };
+  return map[stack] ?? stack;
+}
+
 /** linter → formatter 매핑 */
 function toFormatter(linter?: string): string {
   if (linter === 'biome') return 'biome';
@@ -156,14 +173,14 @@ export async function generateHarnessConfig(projectDir: string, choices: UserCho
     project: {
       name: choices.projectName,
       framework: isMulti
-        ? Object.fromEntries(stacks.map((s) => [s.stack, toFramework(s.stack)])) as unknown as string
+        ? Object.fromEntries(stacks.map((s) => [toAppDir(s.stack), toFramework(s.stack)])) as unknown as string
         : toFramework(choices.stack),
       packageManager: choices.packageManager ?? 'npm',
       language: choices.language ?? 'typescript',
     },
     architecture: isMulti
       ? {
-        style: Object.fromEntries(stacks.map((s) => [s.stack, toArchStyle(s.architecture)])) as unknown as string,
+        style: Object.fromEntries(stacks.map((s) => [toAppDir(s.stack), toArchStyle(s.architecture)])) as unknown as string,
         enforceIndexGen: true,
         forbiddenImports: Object.assign({}, ...stacks.map((s) => getForbiddenImports(s.architecture))),
       }
@@ -179,7 +196,7 @@ export async function generateHarnessConfig(projectDir: string, choices: UserCho
     },
     testing: {
       runner: isMulti
-        ? Object.fromEntries(stacks.map((s) => [s.stack, getDefaultTestRunner(s)])) as unknown as string
+        ? Object.fromEntries(stacks.map((s) => [toAppDir(s.stack), getDefaultTestRunner(s)])) as unknown as string
         : getDefaultTestRunner(choices),
       minCoverage: {
         statements: 80,
