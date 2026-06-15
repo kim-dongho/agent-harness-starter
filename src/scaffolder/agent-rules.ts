@@ -223,16 +223,23 @@ function getStackCommands(choices: UserChoices): { build: string; test: string; 
 function getWorkflowCommands(choices: UserChoices) {
   const tracker = choices.issueTracker ?? 'none';
 
+  const envLoad = 'source .env 2>/dev/null; ';
+  // Jira Cloud Scoped API Token(ATATT)은 api.atlassian.com/ex/jira/{cloudId} 경로에서만 Basic Auth가 동작함
+  // cloudId는 {org}.atlassian.net/_edge/tenant_info에서 조회
+  const jiraCloudId = `CLOUD_ID=$(curl -s "$JIRA_BASE_URL/_edge/tenant_info" | jq -r .cloudId); `;
+  const jiraAuth = '-u "$JIRA_USER_EMAIL:$JIRA_API_TOKEN"';
+  const jiraApi = `https://api.atlassian.com/ex/jira/$CLOUD_ID/rest/api/3`;
+
   const issueFetchMap: Record<string, string> = {
-    jira: '```bash\ncurl -s -u "$JIRA_EMAIL:$JIRA_TOKEN" "$JIRA_URL/rest/api/3/issue/<이슈번호>" | jq .fields.summary,.fields.description,.fields.issuetype.name\n```',
+    jira: `\`\`\`bash\n${envLoad}${jiraCloudId}curl -s ${jiraAuth} "${jiraApi}/issue/<이슈번호>" | jq .fields.summary,.fields.description,.fields.issuetype.name\n\`\`\``,
     none: '이슈 트래커가 설정되지 않았다. 사용자에게 작업 내용을 직접 확인한다.',
   };
   const issueStatusMap: Record<string, string> = {
-    jira: '```bash\ncurl -s -X POST -u "$JIRA_EMAIL:$JIRA_TOKEN" "$JIRA_URL/rest/api/3/issue/<이슈번호>/transitions" -H "Content-Type: application/json" -d \'{"transition":{"id":"21"}}\'\n```',
+    jira: `\`\`\`bash\n${envLoad}${jiraCloudId}curl -s -X POST ${jiraAuth} "${jiraApi}/issue/<이슈번호>/transitions" -H "Content-Type: application/json" -d '{"transition":{"id":"21"}}'\n\`\`\``,
     none: '생략.',
   };
   const issueDoneMap: Record<string, string> = {
-    jira: '```bash\ncurl -s -X POST -u "$JIRA_EMAIL:$JIRA_TOKEN" "$JIRA_URL/rest/api/3/issue/<이슈번호>/transitions" -H "Content-Type: application/json" -d \'{"transition":{"id":"31"}}\'\n```',
+    jira: `\`\`\`bash\n${envLoad}${jiraCloudId}curl -s -X POST ${jiraAuth} "${jiraApi}/issue/<이슈번호>/transitions" -H "Content-Type: application/json" -d '{"transition":{"id":"31"}}'\n\`\`\``,
     none: 'MR 본문에 "Closes #<이슈번호>" 포함.',
   };
 
@@ -240,7 +247,17 @@ function getWorkflowCommands(choices: UserChoices) {
     issueFetch: issueFetchMap[tracker] ?? issueFetchMap.none,
     issueStatus: issueStatusMap[tracker] ?? issueStatusMap.none,
     issueDone: issueDoneMap[tracker] ?? issueDoneMap.none,
-    prCreate: '```bash\nglab mr create --title "<제목>" --description "<본문>"\n```',
+    prCreate: `\`\`\`bash
+${envLoad}# GitLab 프로젝트 감지: git remote → fallback GITLAB_PROJECT_ID
+_R=$(git remote get-url origin 2>/dev/null); _R=\${_R%.git}
+case "$_R" in *://*) _NS=\${_R#*://}; GL_PROJECT=\${_NS#*/} ;; *:*) GL_PROJECT=\${_R##*:} ;; esac
+[ -z "$GL_PROJECT" ] && GL_PROJECT="$GITLAB_PROJECT_ID"
+GL_ENCODED=\${GL_PROJECT//\\//%2F}
+curl -s --header "PRIVATE-TOKEN: $GITLAB_TOKEN" \\
+  "$GITLAB_URL/api/v4/projects/$GL_ENCODED/merge_requests" \\
+  -X POST -H "Content-Type: application/json" \\
+  -d '{"source_branch":"'$(git branch --show-current)'","target_branch":"{{BASE_BRANCH}}","title":"<제목>","description":"<본문>"}'
+\`\`\``,
     baseBranch: 'main',
   };
 }

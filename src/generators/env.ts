@@ -37,10 +37,23 @@ export async function generateEnvExample(projectDir: string, choices: UserChoice
   if (choices.issueTracker === 'jira') {
     lines.push('');
     lines.push('# ─── Jira ───');
-    lines.push('JIRA_URL=https://your-domain.atlassian.net');
-    lines.push('JIRA_EMAIL=');
-    lines.push('JIRA_TOKEN=');
+    lines.push('JIRA_BASE_URL=https://your-domain.atlassian.net');
+    lines.push('JIRA_USER_EMAIL=');
+    lines.push('JIRA_API_TOKEN=');
   }
+
+  // GitLab Personal Access Token
+  // - CI용: read_api (읽기만)
+  // - 로컬용: api (MR 생성 — POST /merge_requests)
+  // - 공용: api
+  lines.push('');
+  lines.push('# ─── GitLab ───');
+  lines.push('# glab CLI 사용 시: glab auth login 으로 인증');
+  lines.push('# API 직접 호출 시: Personal Access Token (api scope)');
+  lines.push('GITLAB_URL=https://gitlab.example.com');
+  lines.push('GITLAB_TOKEN=');
+  lines.push('# git remote에서 자동 감지됨. 감지 실패 시 직접 입력 (예: group/project-name)');
+  lines.push('GITLAB_PROJECT_ID=');
 
   // 항상 .env.example 생성 (내용이 없더라도 빈 템플릿)
   if (lines.length === 0) {

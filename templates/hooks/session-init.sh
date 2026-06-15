@@ -10,6 +10,13 @@ if [ ! -f "$CONFIG" ]; then
   exit 0
 fi
 
+# .env 로드 — 환경변수(JIRA_TOKEN 등) 사용 가능하게
+if [ -f "$PROJECT_DIR/.env" ]; then
+  set -a
+  source "$PROJECT_DIR/.env"
+  set +a
+fi
+
 echo "=== Agent Harness Active ==="
 echo ""
 
@@ -67,6 +74,28 @@ if [ -f "$GLOSSARY" ]; then
   echo "Domain glossary ($TERM_COUNT terms): $TERMS"
 fi
 
+# GitLab 프로젝트 감지 — git remote → fallback .env
+GITLAB_PROJECT=""
+if [ -n "${GITLAB_URL:-}" ]; then
+  REMOTE_URL=$(git -C "$PROJECT_DIR" remote get-url origin 2>/dev/null || true)
+  if [ -n "$REMOTE_URL" ]; then
+    # .git 접미사 제거 + group/project 추출 (sed 없이 bash 문자열 처리)
+    _R="${REMOTE_URL%.git}"
+    # SSH(git@host:group/project) → : 이후 / HTTPS(https://host/group/project) → 호스트 이후
+    case "$_R" in
+      *://*) _NS="${_R#*://}"; GITLAB_PROJECT="${_NS#*/}" ;;
+      *:*)   GITLAB_PROJECT="${_R##*:}" ;;
+    esac
+  fi
+  if [ -z "$GITLAB_PROJECT" ] && [ -n "${GITLAB_PROJECT_ID:-}" ]; then
+    GITLAB_PROJECT="$GITLAB_PROJECT_ID"
+  fi
+  if [ -n "$GITLAB_PROJECT" ]; then
+    echo ""
+    echo "GitLab: $GITLAB_URL/$GITLAB_PROJECT"
+  fi
+fi
+
 # SDLC Pipeline status
 echo ""
 echo "=== SDLC Pipeline ==="
@@ -75,7 +104,7 @@ echo "2. /analyze → 도메인 용어집 + 기능 스펙"
 echo "3. /design  → 인터페이스, API 계약, 컴포넌트 구조"
 echo "4. /generate <type> <name> → 파일 생성 (직접 Write 금지)"
 echo "5. /start <이슈번호> → 이슈 기반 작업 시작"
-echo "6. /done    → 품질 게이트 + 커밋 + MR"
+echo "6. /done    → 품질 게이트 + 커밋 + MR 생성"
 echo ""
 
 # SDLC 상태 — docs/features/ 기반
