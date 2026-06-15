@@ -1,6 +1,6 @@
 {
   "name": "@frontend-playground/agent-harness-starter",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Scaffold projects with AI agent rules",
   "type": "module",
   "bin": {
