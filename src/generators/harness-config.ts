@@ -199,7 +199,7 @@ export async function generateHarnessConfig(projectDir: string, choices: UserCho
     development: {
       linter: choices.linter === 'biome' ? 'biome' : 'eslint',
       formatter: toFormatter(choices.linter),
-      styling: choices.style ?? '',
+      styling: choices.style ?? stacks.find((s) => getStackCategory(s.stack) === 'frontend')?.style ?? '',
     },
     testing: {
       runner: isMulti

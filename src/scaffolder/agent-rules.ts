@@ -141,10 +141,12 @@ async function replaceSkillPlaceholders(projectDir: string, choices: UserChoices
     '{{ISSUE_DONE_COMMAND}}': wf.issueDone,
     '{{PR_CREATE_COMMAND}}': wf.prCreate,
     '{{BASE_BRANCH}}': wf.baseBranch,
+    '{{STYLING}}': choices.style ?? choices.stacks?.find((s) => getStackCategory(s.stack) === 'frontend')?.style ?? 'CSS Module',
   };
 
-  // skills 디렉토리 내 모든 md 파일 치환
-  const skillDirs = ['.claude/skills', '.cursor/skills', '.windsurf/skills', '.cline/skills', '.github/skills', '.gemini/skills'];
+  // skills + rules 디렉토리 내 모든 md 파일 치환
+  const skillDirs = ['.claude/skills', '.cursor/skills', '.windsurf/skills', '.cline/skills', '.github/skills', '.gemini/skills',
+    '.claude/rules', '.cursor/rules', '.windsurf/rules', '.cline/rules', '.github/rules', '.gemini/rules'];
   for (const dir of skillDirs) {
     const fullDir = path.join(projectDir, dir);
     if (await fs.pathExists(fullDir)) {
