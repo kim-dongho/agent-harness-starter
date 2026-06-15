@@ -4,7 +4,7 @@ set -euo pipefail
 # 에이전트 환경변수 통합 — Claude/Gemini/Codex/Cursor 호환
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GEMINI_PROJECT_DIR:-${CODEX_PROJECT_DIR:-${CURSOR_PROJECT_DIR:-$PWD}}}}"
 
-_log() { mkdir -p "$PROJECT_DIR/.harness"; printf "[%s] scope-guard: %s\n" "$(date -u +%H:%M:%S)" "$1" >> "$PROJECT_DIR/.harness/harness.log"; }
+_log() { mkdir -p "$PROJECT_DIR/.harness"; printf "[%s] scope-guard: %s\n" "$(TZ=Asia/Seoul date +%H:%M:%S)" "$1" >> "$PROJECT_DIR/.harness/harness.log"; }
 _metric() { mkdir -p "$PROJECT_DIR/.harness"; printf '{"ts":"%s","hook":"scope-guard","event":"%s","file":"%s"}\n' "$(TZ=Asia/Seoul date +%Y-%m-%dT%H:%M:%S+09:00)" "$1" "$2" >> "$PROJECT_DIR/.harness/metrics.jsonl"; }
 
 INPUT=$(cat)

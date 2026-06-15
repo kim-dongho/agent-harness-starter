@@ -19,7 +19,7 @@ if [ ! -f "$LEARNINGS" ]; then
   echo '{"learnings":[]}' > "$LEARNINGS"
 fi
 
-DATE=$(date -u +%Y-%m-%d)
+DATE=$(TZ=Asia/Seoul date +%Y-%m-%d)
 
 # 에러 코드 → 규칙 매핑
 error_to_rule() {

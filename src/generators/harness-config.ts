@@ -216,8 +216,8 @@ export async function generateHarnessConfig(projectDir: string, choices: UserCho
     agent: {
       persona: 'senior-developer',
       allowedScopes: choices.repoStructure === 'monorepo'
-        ? ['apps/**/*', 'packages/**/*', 'tests/**/*']
-        : ['src/**/*', 'tests/**/*'],
+        ? ['apps/**/*', 'packages/**/*', 'tests/**/*', 'docs/**/*']
+        : ['src/**/*', 'tests/**/*', 'docs/**/*'],
       adapters: [toAdapter(choices.agent)],
     },
     rules: {

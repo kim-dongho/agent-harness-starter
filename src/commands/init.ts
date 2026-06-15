@@ -411,7 +411,7 @@ export async function initHarness(projectDir?: string): Promise<void> {
     },
     agent: {
       persona: 'senior-developer',
-      allowedScopes: ['src/**/*', 'tests/**/*'],
+      allowedScopes: ['src/**/*', 'tests/**/*', 'docs/**/*'],
       adapters: [...new Set([...existingAdapters, agent as string])],
     },
     rules: {
