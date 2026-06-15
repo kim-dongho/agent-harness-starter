@@ -49,75 +49,10 @@ export async function setupMonorepoSharedPackages(
     await fs.writeFile(path.join(projectDir, '.npmrc'), 'auto-install-peers=true\n');
   }
 
-  // 린터 선택에 따라 공유 설정 생성
-  if (linter === 'eslint-prettier') {
-    await setupSharedEslint(projectDir);
-  } else if (linter === 'biome') {
+  // 린터 — Biome은 루트 설정만 (ESLint는 각 앱이 자체 설정 사용)
+  if (linter === 'biome') {
     await setupSharedBiome(projectDir);
   }
-}
-
-// ─── 공유 ESLint + Prettier 설정 ───
-
-async function setupSharedEslint(projectDir: string): Promise<void> {
-  const pkgDir = path.join(projectDir, 'packages', 'eslint-config');
-  await fs.ensureDir(pkgDir);
-
-  await fs.writeJson(path.join(pkgDir, 'package.json'), {
-    name: '@repo/eslint-config',
-    version: '0.0.0',
-    private: true,
-    files: ['*.js'],
-    devDependencies: {
-      eslint: '^9',
-      'eslint-config-prettier': '^10',
-      'eslint-plugin-prettier': '^5',
-      '@eslint/js': '^9',
-      'typescript-eslint': '^8',
-      prettier: '^3',
-    },
-  }, { spaces: 2 });
-
-  await fs.writeFile(path.join(pkgDir, 'base.js'), `import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import prettierConfig from 'eslint-config-prettier';
-
-export default [
-  js.configs.recommended,
-  ...tseslint.configs.recommended,
-  prettierConfig,
-  {
-    rules: {
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      '@typescript-eslint/no-explicit-any': 'error',
-    },
-  },
-  {
-    ignores: ['dist/', 'node_modules/', '.next/', 'build/'],
-  },
-];
-`);
-
-  await fs.writeFile(path.join(pkgDir, 'react.js'), `import base from './base.js';
-
-export default [
-  ...base,
-  {
-    settings: {
-      react: { version: 'detect' },
-    },
-  },
-];
-`);
-
-  // 루트 prettier 설정
-  await fs.writeJson(path.join(projectDir, '.prettierrc'), {
-    semi: true,
-    singleQuote: true,
-    trailingComma: 'all',
-    printWidth: 100,
-    tabWidth: 2,
-  }, { spaces: 2 });
 }
 
 // ─── 공유 Biome 설정 ───

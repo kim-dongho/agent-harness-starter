@@ -220,7 +220,7 @@ ${setup}
 COPY . .
 RUN ${install}
 
-EXPOSE 3000
+EXPOSE 4000
 CMD ["npx", "tsx", "src/index.ts"]
 `;
   }
@@ -233,7 +233,7 @@ COPY . .
 RUN ${install}
 RUN if grep -q '"build"' package.json; then ${pmRun(pm)} run build; fi
 
-EXPOSE 3000
+EXPOSE 4000
 CMD ["sh", "-c", "if [ -f dist/main.js ]; then node dist/main.js; else npx tsx src/main.ts; fi"]
 `;
 }
@@ -424,7 +424,7 @@ async function writeDockerCompose(projectDir: string, stacks: StackConfig[]): Pr
   /** 컨테이너 내부 포트 (카테고리별) */
   const containerPortMap: Record<string, number> = {
     frontend: 3000,
-    'node-backend': 3000,
+    'node-backend': 4000,
     go: 8080,
     python: 8000,
     java: 8080,
@@ -435,11 +435,11 @@ async function writeDockerCompose(projectDir: string, stacks: StackConfig[]): Pr
 
   /**
    * 모노레포에서 호스트 포트 충돌 방지:
-   * FE=3000, Node BE=3001, Go/Java/Rust/Kotlin/Dotnet=8080, Python=8000
+   * FE=3000, Node BE=4000, Go/Java/Rust/Kotlin/Dotnet=8080, Python=8000
    */
   const hostPortMap: Record<string, number> = {
     frontend: 3000,
-    'node-backend': 3001,
+    'node-backend': 4000,
     go: 8080,
     python: 8000,
     java: 8080,
