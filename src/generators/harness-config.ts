@@ -116,6 +116,23 @@ function toAdapter(agent: string): string {
   return map[agent] ?? 'generic';
 }
 
+/** 스택별 기본 테스트 러너 */
+function getDefaultTestRunner(config: { stack: string; testFramework?: string }): string {
+  if (config.testFramework) return config.testFramework;
+  const defaults: Record<string, string> = {
+    'go-gin': 'go test', 'go-fiber': 'go test', 'go-echo': 'go test',
+    'python-fastapi': 'pytest', 'python-django': 'pytest', 'python-flask': 'pytest',
+    'java-spring': 'junit',
+    'rust-axum': 'cargo test', 'rust-actix': 'cargo test',
+    'kotlin-ktor': 'junit',
+    'dotnet': 'dotnet test',
+    'solidity-hardhat': 'hardhat test', 'solidity-foundry': 'forge test',
+    'solana-anchor': 'anchor test',
+    'move-sui': 'sui move test',
+  };
+  return defaults[config.stack] ?? 'vitest';
+}
+
 /** linter → formatter 매핑 */
 function toFormatter(linter?: string): string {
   if (linter === 'biome') return 'biome';
@@ -132,36 +149,51 @@ export async function generateHarnessConfig(projectDir: string, choices: UserCho
   const category = getStackCategory(choices.stack);
   const isFrontend = category === 'frontend';
 
+  const stacks = choices.stacks ?? [choices];
+  const isMulti = stacks.length > 1;
+
   const config: HarnessConfig = {
     project: {
       name: choices.projectName,
-      framework: toFramework(choices.stack),
+      framework: isMulti
+        ? Object.fromEntries(stacks.map((s) => [s.stack, toFramework(s.stack)])) as unknown as string
+        : toFramework(choices.stack),
       packageManager: choices.packageManager ?? 'npm',
       language: choices.language ?? 'typescript',
     },
-    architecture: {
-      style: toArchStyle(choices.architecture),
-      enforceIndexGen: true,
-      forbiddenImports: getForbiddenImports(choices.architecture),
-    },
+    architecture: isMulti
+      ? {
+        style: Object.fromEntries(stacks.map((s) => [s.stack, toArchStyle(s.architecture)])) as unknown as string,
+        enforceIndexGen: true,
+        forbiddenImports: Object.assign({}, ...stacks.map((s) => getForbiddenImports(s.architecture))),
+      }
+      : {
+        style: toArchStyle(choices.architecture),
+        enforceIndexGen: true,
+        forbiddenImports: getForbiddenImports(choices.architecture),
+      },
     development: {
       linter: choices.linter === 'biome' ? 'biome' : 'eslint',
       formatter: toFormatter(choices.linter),
       styling: choices.style ?? '',
     },
     testing: {
-      runner: choices.testFramework ?? 'vitest',
+      runner: isMulti
+        ? Object.fromEntries(stacks.map((s) => [s.stack, getDefaultTestRunner(s)])) as unknown as string
+        : getDefaultTestRunner(choices),
       minCoverage: {
         statements: 80,
         branches: 75,
         functions: 80,
         lines: 80,
       },
-      requireTestFileWithImplementation: !isFrontend,
+      requireTestFileWithImplementation: stacks.some((s) => getStackCategory(s.stack) !== 'frontend'),
     },
     agent: {
       persona: 'senior-developer',
-      allowedScopes: ['src/**/*', 'tests/**/*'],
+      allowedScopes: choices.repoStructure === 'monorepo'
+        ? ['apps/**/*', 'packages/**/*', 'tests/**/*']
+        : ['src/**/*', 'tests/**/*'],
       adapters: [toAdapter(choices.agent)],
     },
     rules: {
