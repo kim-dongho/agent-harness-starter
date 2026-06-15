@@ -129,7 +129,6 @@ async function createMonorepo(
   spinner.start('모노레포 루트 구조 생성 중...');
   await fs.ensureDir(projectDir);
   await fs.ensureDir(path.join(projectDir, 'apps'));
-  await fs.ensureDir(path.join(projectDir, 'packages'));
 
   const pm = choices.packageManager ?? 'npm';
   const pmVersions: Record<string, string> = {
@@ -143,7 +142,7 @@ async function createMonorepo(
     name: choices.projectName,
     private: true,
     packageManager: pmVersions[pm] ?? pmVersions.npm,
-    workspaces: pm !== 'pnpm' ? ['apps/*', 'packages/*'] : undefined,
+    workspaces: pm !== 'pnpm' ? ['apps/*'] : undefined,
     scripts: {
       dev: 'turbo dev',
       build: 'turbo build',

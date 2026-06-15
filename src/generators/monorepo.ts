@@ -36,7 +36,7 @@ export async function setupMonorepoSharedPackages(
   if (pm === 'pnpm') {
     await fs.writeFile(
       path.join(projectDir, 'pnpm-workspace.yaml'),
-      `packages:\n  - "apps/*"\n  - "packages/*"\n`,
+      `packages:\n  - "apps/*"\n`,
     );
     // pnpm은 workspaces 필드 대신 pnpm-workspace.yaml 사용
     const pkg = await fs.readJson(path.join(projectDir, 'package.json'));

@@ -82,8 +82,10 @@ export default defineConfig({
     }
   } else if (config.testFramework === 'jest') {
     pkg.devDependencies['jest'] = '^29';
-    pkg.devDependencies['@types/jest'] = '^29';
-    pkg.devDependencies['ts-jest'] = '^29';
+    if (config.language === 'typescript') {
+      pkg.devDependencies['@types/jest'] = '^29';
+      pkg.devDependencies['ts-jest'] = '^29';
+    }
     if (category === 'frontend') {
       pkg.devDependencies['@testing-library/react'] = '^16';
       pkg.devDependencies['@testing-library/jest-dom'] = '^6';
@@ -94,10 +96,12 @@ export default defineConfig({
 
     await fs.writeJson(pkgPath, pkg, { spaces: 2 });
 
-    // jest.config.ts
-    await fs.writeFile(
-      path.join(projectDir, 'jest.config.ts'),
-      `import type { Config } from 'jest';
+    // jest config — 언어에 따라 ts/js 분기
+    const isTs = config.language === 'typescript';
+    if (isTs) {
+      await fs.writeFile(
+        path.join(projectDir, 'jest.config.ts'),
+        `import type { Config } from 'jest';
 
 const config: Config = {
   preset: 'ts-jest',
@@ -109,7 +113,20 @@ const config: Config = {
 
 export default config;
 `,
-    );
+      );
+    } else {
+      await fs.writeFile(
+        path.join(projectDir, 'jest.config.js'),
+        `/** @type {import('jest').Config} */
+module.exports = {
+  testEnvironment: '${category === 'frontend' ? 'jsdom' : 'node'}',
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+  },
+};
+`,
+      );
+    }
   }
 }
 
