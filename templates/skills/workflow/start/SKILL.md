@@ -6,7 +6,7 @@ description: 이슈 기반 작업 시작. `/start ISSUE-123` 으로 호출하면
 
 `/start <이슈번호>` 로 호출한다. 아래 단계를 순서대로 수행한다.
 
-### 1. 이슈 조회
+### 1. 이슈 조회 (`/fetch-issue`)
 
 {{ISSUE_FETCH_COMMAND}}
 
@@ -44,9 +44,12 @@ description: 이슈 기반 작업 시작. `/start ISSUE-123` 으로 호출하면
 
 ### 2. 이슈 상태 변경
 
+이슈의 현재 상태를 먼저 확인한다. **"해야할 일(To Do)" 상태인 경우에만** "진행 중(In Progress)"으로 변경한다.
+이미 "진행 중", "완료", "리뷰 중" 등 다른 상태이면 상태를 변경하지 않는다.
+
 {{ISSUE_STATUS_COMMAND}}
 
-### 3. 브랜치 생성
+### 3. 브랜치 생성 (`/branch`)
 
 이슈 타입에 따라 브랜치 prefix를 결정한다:
 
@@ -57,8 +60,16 @@ description: 이슈 기반 작업 시작. `/start ISSUE-123` 으로 호출하면
 | Chore / Task | `chore/` |
 | Refactor | `refactor/` |
 
+이슈번호가 있으면 번호만으로, 없으면 설명으로 브랜치를 생성한다:
+
 ```bash
-git checkout -b <prefix><이슈번호>-<간략한-설명>
+# 이슈번호 있을 때
+git checkout -b <prefix><이슈번호>
+# 예: feature/VM2026-82
+
+# 이슈번호 없을 때
+git checkout -b <prefix><간략한-설명>
+# 예: feature/login-page-ui
 ```
 
 ### 4. 변경 대상 분석
@@ -71,27 +82,15 @@ git checkout -b <prefix><이슈번호>-<간략한-설명>
 
 | 스택 | 분석 항목 |
 |------|----------|
-| Frontend | Figma 링크가 있으면 MCP로 디자인 분석 → 컴포넌트 구조 도출 (아래 Figma 분석 전략 참고) |
+| Frontend | Figma 링크가 있으면 `/figma`로 디자인 분석 → 컴포넌트 구조 도출 |
 | Backend | Swagger/OpenAPI 스펙, DB 스키마(Prisma/migration), 기존 유사 엔드포인트 참고 |
 | Blockchain | 기존 컨트랙트 인터페이스, 보안 체크리스트(SWC/Sealevel 등) 자동 로드 |
 
-#### Figma 분석 전략 (토큰 절약)
+#### Figma 분석
 
-Figma 링크가 있을 때 단계적으로 접근한다. **한 번에 전체 코드를 가져오지 않는다.**
-
-1. **구조 파악 (이 단계에서 사용)**
-   - `get_metadata` — 레이어 이름, 위치, 크기만 가져온다 (토큰 적음)
-   - `get_screenshot` — 스크린샷으로 전체 레이아웃을 확인한다 (토큰 적음)
-   - 이 두 가지로 컴포넌트 구조와 구현 계획을 도출한다
-
-2. **구현 단계에서 필요할 때만**
-   - `get_design_context` — 특정 노드의 코드를 가져온다 (토큰 많음)
-   - 전체 페이지가 아닌 **개별 컴포넌트 노드 단위**로 호출한다
-
-**Figma 링크 구분:**
-- 기획 Figma (와이어프레임) — Description에서 스펙/조건/플로우 추출
-- 디자인 Figma (시안) — UI 컴포넌트 구조, 색상, 간격, 폰트 추출
-- 두 링크가 모두 있으면 둘 다 분석한다
+Figma 링크가 있으면 `/figma` 스킬의 토큰 절약 전략을 따른다:
+1. `get_metadata` + `get_screenshot`으로 구조 파악 (이 단계)
+2. `get_design_context`는 구현 단계에서 최소 단위 노드에만 호출
 
 ### 5. 복잡도 판단
 

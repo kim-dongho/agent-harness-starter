@@ -98,13 +98,15 @@ fi
 
 # SDLC Pipeline status
 echo ""
-echo "=== SDLC Pipeline ==="
-echo "1. /plan    → 기능, 우선순위, 마일스톤"
-echo "2. /analyze → 도메인 용어집 + 기능 스펙"
-echo "3. /design  → 인터페이스, API 계약, 컴포넌트 구조"
-echo "4. /generate <type> <name> → 파일 생성 (직접 Write 금지)"
-echo "5. /start <이슈번호> → 이슈 기반 작업 시작"
-echo "6. /done    → 품질 게이트 + 커밋 + MR 생성"
+echo "=== 이슈 기반 ==="
+echo "/start <이슈번호> → 이슈 조회 → Figma 분석 → 구현 → /done"
+echo "/done              → 품질 게이트 → 커밋 → MR 생성"
+echo ""
+echo "=== 기획부터 ==="
+echo "/plan → /analyze → /design → /generate → /done"
+echo ""
+echo "=== 개별 스킬 ==="
+echo "/fetch-issue  /branch  /figma  /lint  /test  /commit  /create-mr"
 echo ""
 
 # SDLC 상태 — docs/features/ 기반
