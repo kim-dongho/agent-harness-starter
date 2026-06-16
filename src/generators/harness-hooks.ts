@@ -46,65 +46,6 @@ async function copyHookScripts(projectDir: string, agent: string): Promise<numbe
   return count;
 }
 
-/** Stop hook의 agent 프롬프트 (Claude/Codex/Gemini 공통) */
-const STOP_AGENT_PROMPT = [
-  '아래를 순서대로 수행하라.',
-  '',
-  '## 사전 조건',
-  '`git diff --name-only HEAD`를 실행하여 변경된 파일이 있는지 확인한다.',
-  '변경된 파일이 없으면 "변경 없음 — 리뷰 스킵" 을 출력하고 ok: true를 반환하라. 이후 단계를 실행하지 않는다.',
-  '',
-  '## 0. 무한 루프 방지',
-  '`.harness/review-count` 파일을 읽어라. 숫자가 3 이상이면 "리뷰 3회 초과 — 스킵합니다"를 출력하고 ok: true를 반환하라.',
-  '파일이 없으면 0으로 간주한다. 리뷰 실행 후 숫자를 +1하여 저장한다.',
-  '리뷰 통과(ok: true) 시 파일을 삭제하여 카운터를 초기화한다.',
-  '',
-  '## 1. Adversarial Code Review (feedback.md 기반)',
-  '',
-  '### 이전 피드백 확인',
-  '`.harness/feedback.md`가 존재하면 이전 리뷰 피드백이 있다.',
-  '이전 피드백에서 지적한 사항이 수정되었는지 `git diff HEAD`로 확인한다.',
-  '수정되지 않은 항목이 있으면 다시 지적한다.',
-  '',
-  '### 코드 리뷰',
-  '`git diff HEAD`로 변경된 파일을 확인하고, 변경된 코드만 리뷰한다.',
-  '변경이 없으면 스킵한다.',
-  '리뷰 기준:',
-  '- 정확성: 로직 에러, 엣지 케이스 누락',
-  '- 보안: 미검증 입력, 하드코딩 시크릿',
-  '- 성능: N+1, 불필요한 루프',
-  '- 컨벤션: harness.config.json의 codingStandards 위반',
-  '- 스코프: 요청 범위 밖 변경',
-  '',
-  '## 2. Intent Verification',
-  '',
-  '`docs/features/*.md` 또는 `docs/designs/*.md`가 존재하면 수행한다. 없으면 스킵.',
-  '',
-  '`git diff HEAD`로 변경된 파일 목록을 스펙과 대조한다:',
-  '- 스펙에 정의된 기능인데 테스트가 없으면 → "테스트 누락" 경고',
-  '- 스펙에 없는 파일이 변경됐으면 → "스코프 벗어남" 경고',
-  '- 스펙의 인터페이스(input/output)와 구현이 다르면 → "의도 이탈" 경고',
-  '',
-  '### 결과 기록',
-  '코드 리뷰 + Intent Verification을 종합하여 판정한다.',
-  '',
-  '문제 발견 시:',
-  '  1. `.harness/feedback.md`에 리뷰 + 의도 검증 결과를 기록한다 (날짜, 파일, 지적 사항)',
-  '  2. 결과를 출력한 후 ok: true를 반환한다 (non-blocking)',
-  '',
-  '문제 없으면:',
-  '  1. `.harness/feedback.md`를 삭제한다',
-  '  2. `.harness/review-count`를 삭제한다',
-  '  3. ok: true를 반환한다',
-  '',
-  '**중요: 항상 ok: true를 반환한다. ok: false는 사용하지 않는다.**',
-  '',
-  '## 3. Learnings Loop',
-  '.harness/errors.log 파일이 존재하고 내용이 있으면 분석하여 .harness/learnings.json에 학습 기록을 추가하라.',
-  '파일이 없거나 비어있으면 스킵한다.',
-  '기록 형식: { "id": "learn-NNN", "date": "YYYY-MM-DD", "category": "code-pattern|architecture|convention|testing|scope", "mistake": "한 줄 요약", "correction": "올바른 방법", "rule": "앞으로 지켜야 할 규칙" }',
-  '분석 후 errors.log를 비운다.',
-].join('\n');
 
 /** Codex PostToolUse agent hook prompt — command hook stdout 미주입 환경 보완 */
 const POST_WRITE_AGENT_PROMPT = [
@@ -154,7 +95,6 @@ function generateClaudeSettings(projectDir: string) {
     Stop: [
       { hooks: [
         { type: 'command', command: h('stop-review.sh'), statusMessage: 'Running final harness review...' },
-        { type: 'agent', prompt: STOP_AGENT_PROMPT, timeout: 60 },
       ] },
     ],
   };

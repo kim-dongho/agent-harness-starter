@@ -76,7 +76,7 @@ if [ -n "$LINT_RESULT" ] && echo "$LINT_RESULT" | grep -qiE "error|✖|×"; then
   CONTEXT="$CONTEXT\n⚠️ Lint errors in $REL_PATH:\n$LINT_ERRORS"
   # linter별 에러코드 추출
   case "$LINTER" in
-    biome)  _add_codes $(echo "$LINT_RESULT" | awk '/━━/ {print $2}') ;;
+    biome)  _add_codes $(echo "$LINT_RESULT" | awk '/━━/ && /\.(ts|tsx|js|jsx|css|json)/ {print $2}') ;;
     eslint) _add_codes $(echo "$LINT_RESULT" | awk '/error/ {print $NF}') ;;
   esac
 fi
@@ -265,8 +265,8 @@ if [ -n "$CONTEXT" ]; then
   }
   for CODE in $(printf '%s' "$ECODES" | tr ' ' '\n' | sort -u | grep -v '^$'); do
     RULE=$(_error_to_rule "$CODE" "$REL_PATH")
-    # 중복 체크
-    DUP=$(jq --arg r "$RULE" '.learnings[] | select(.rule == $r) | .id' "$LEARNINGS_FILE" 2>/dev/null || true)
+    # 중복 체크 — 같은 에러코드가 이미 있으면 스킵 (파일 경로 무관)
+    DUP=$(jq --arg c "$CODE" '.learnings[] | select(.mistake == $c) | .id' "$LEARNINGS_FILE" 2>/dev/null | head -1 || true)
     if [ -n "$DUP" ]; then continue; fi
     # 추가 (최대 20개 유지)
     NEW_ID="learn-$(date +%s)-$RANDOM"
@@ -279,17 +279,11 @@ if [ -n "$CONTEXT" ]; then
 
   # AutoHarness — 반복 에러 감지 → config 규칙 추가 제안
   _code_to_config_rule() {
-    case "$1" in
-      TS2322) echo '{"id":"strict-return-type","description":"함수 반환 타입을 반드시 명시한다","severity":"warning"}' ;;
-      TS7006) echo '{"id":"no-implicit-any","description":"파라미터에 타입을 반드시 명시한다","severity":"warning"}' ;;
-      TS2345) echo '{"id":"strict-arg-type","description":"함수 호출 시 인자 타입을 확인한다","severity":"warning"}' ;;
-      TS2339) echo '{"id":"strict-property-access","description":"존재하지 않는 속성 접근을 금지한다","severity":"warning"}' ;;
-      TS2532) echo '{"id":"strict-null-check","description":"null/undefined 가능성을 반드시 처리한다","severity":"warning"}' ;;
-      TS6133) echo '{"id":"no-unused-vars","description":"미사용 변수를 선언하지 않는다","severity":"warning"}' ;;
-      SWC-115) echo '{"id":"no-tx-origin","description":"tx.origin 대신 msg.sender를 사용한다","severity":"error"}' ;;
-      SWC-103) echo '{"id":"fixed-pragma","description":"Solidity pragma 버전을 고정한다","severity":"error"}' ;;
-      *) echo "" ;;
-    esac
+    local code="$1"
+    # 보안 에러는 severity: error, 그 외 warning
+    local sev="warning"
+    case "$code" in SWC-*) sev="error" ;; esac
+    printf '{"id":"%s","description":"%s","severity":"%s"}' "$code" "$code" "$sev"
   }
   AUTOHARNESS_MSG=""
   EXISTING_RULES=$(jq -r '.rules.codingStandards[]?.id // empty' "$CONFIG" 2>/dev/null)
