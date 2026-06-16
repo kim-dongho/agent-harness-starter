@@ -162,7 +162,7 @@ async function createMonorepo(
     },
   }, { spaces: 2 });
 
-  await fs.writeFile(path.join(projectDir, '.gitignore'), 'node_modules\ndist\n.turbo\n.env\n');
+  await fs.writeFile(path.join(projectDir, '.gitignore'), 'node_modules\ndist\n.turbo\n.env\n.harness\n');
   spinner.stop('모노레포 루트 구조 생성 완료');
   steps.push(`${pc.green('✓')} Turborepo 루트 구조`);
 
