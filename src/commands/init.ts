@@ -20,6 +20,7 @@ import { AGENTS, ISSUE_TRACKERS } from '../constants.js';
 import { getAdapter, type AgentType } from '../engines/adapters/index.js';
 import { loadStackRules, loadStackRulesByDir } from '../engines/adapters/loaders.js';
 import { setupHarnessHooks } from '../generators/harness-hooks.js';
+import { generateEnvExample } from '../generators/env.js';
 import { TEMPLATES_DIR } from '../scaffolder/utils.js';
 import { getStackCategory, getStackRuleDirs, type StackValue } from '../constants.js';
 import type { HarnessConfig } from '../engines/adapters/types.js';
@@ -484,7 +485,24 @@ export async function initHarness(projectDir?: string): Promise<void> {
   }
   spinner.stop('Skills 복사 완료');
 
-  // 9. 결과 요약
+  // 9. .env.example에 하네스 변수 추가 (Jira/GitLab)
+  const envExamplePath = path.join(root, '.env.example');
+  const existing = await fs.pathExists(envExamplePath) ? await fs.readFile(envExamplePath, 'utf-8') : '';
+  const appendLines: string[] = [];
+
+  if (issueTracker === 'jira' && !existing.includes('JIRA_BASE_URL')) {
+    appendLines.push('', '# ─── Jira ───', 'JIRA_BASE_URL=https://your-domain.atlassian.net', 'JIRA_USER_EMAIL=', 'JIRA_API_TOKEN=');
+  }
+  if (!existing.includes('GITLAB_URL')) {
+    appendLines.push('', '# ─── GitLab ───', '# glab CLI 사용 시: glab auth login 으로 인증', '# API 직접 호출 시: Personal Access Token (api scope)', 'GITLAB_URL=https://gitlab.example.com', 'GITLAB_TOKEN=', '# git remote에서 자동 감지됨. 감지 실패 시 직접 입력 (예: group/project-name)', 'GITLAB_PROJECT_ID=');
+  }
+
+  if (appendLines.length > 0) {
+    await fs.appendFile(envExamplePath, appendLines.join('\n') + '\n');
+    p.log.success(`${pc.green('✓')} .env.example에 하네스 변수 추가`);
+  }
+
+  // 10. 결과 요약
   p.log.success(`${pc.green('✓')} harness.config.json`);
   p.log.success(`${pc.green('✓')} 에이전트 설정 (${adapter.name}) — ${fileCount}개 파일`);
   if (hookCount > 0) p.log.success(`${pc.green('✓')} Hooks — ${hookCount}개`);
