@@ -48,7 +48,3 @@ git diff --stat
 
 push → MR 생성:
 {{PR_CREATE_COMMAND}}
-
-### 이슈 상태 변경
-
-{{ISSUE_DONE_COMMAND}}
