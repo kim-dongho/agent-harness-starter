@@ -10,7 +10,12 @@ if [ ! -f "$CONFIG" ]; then
 fi
 
 # 파일 변경이 없으면 리뷰 불필요 — 분석/계획만 한 경우 스킵
-CHANGED_COUNT=$(git diff --name-only HEAD 2>/dev/null | wc -l | tr -d ' ')
+# HEAD가 없으면(초기 커밋 전) untracked 파일로 판단
+if git rev-parse HEAD &>/dev/null; then
+  CHANGED_COUNT=$(git diff --name-only HEAD 2>/dev/null | wc -l | tr -d ' ')
+else
+  CHANGED_COUNT=$(git status --short 2>/dev/null | wc -l | tr -d ' ')
+fi
 if [ "$CHANGED_COUNT" = "0" ]; then
   exit 0
 fi
