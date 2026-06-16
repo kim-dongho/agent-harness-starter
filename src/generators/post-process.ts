@@ -85,6 +85,7 @@ export default defineConfig({
     if (config.language === 'typescript') {
       pkg.devDependencies['@types/jest'] = '^29';
       pkg.devDependencies['ts-jest'] = '^29';
+      pkg.devDependencies['ts-node'] = '^10';
     }
     if (category === 'frontend') {
       pkg.devDependencies['@testing-library/react'] = '^16';
@@ -105,7 +106,7 @@ export default defineConfig({
 
 const config: Config = {
   preset: 'ts-jest',
-  testEnvironment: '${category === 'frontend' ? 'jsdom' : 'node'}',
+  testEnvironment: '${category === 'frontend' ? 'jsdom' : 'node'}',${category === 'frontend' ? `\n  setupFilesAfterEnv: ['@testing-library/jest-dom'],` : ''}
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
@@ -119,7 +120,7 @@ export default config;
         path.join(projectDir, 'jest.config.js'),
         `/** @type {import('jest').Config} */
 module.exports = {
-  testEnvironment: '${category === 'frontend' ? 'jsdom' : 'node'}',
+  testEnvironment: '${category === 'frontend' ? 'jsdom' : 'node'}',${category === 'frontend' ? `\n  setupFilesAfterEnv: ['@testing-library/jest-dom'],` : ''}
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
