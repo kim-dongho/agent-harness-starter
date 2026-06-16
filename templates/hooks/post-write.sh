@@ -52,6 +52,8 @@ case "$FILE_PATH" in
 esac
 
 CONTEXT=""
+ECODES=""
+_add_codes() { ECODES="$ECODES $*"; }
 
 # 0. Auto-format — 파일 수정 후 자동 포맷팅 (포맷터가 설치된 경우에만)
 FORMATTER=$(jq -r '.development.formatter // "none"' "$CONFIG")
@@ -72,6 +74,11 @@ esac
 if [ -n "$LINT_RESULT" ] && echo "$LINT_RESULT" | grep -qiE "error|✖|×"; then
   LINT_ERRORS=$(echo "$LINT_RESULT" | grep -iE "error|✖|×" | head -5)
   CONTEXT="$CONTEXT\n⚠️ Lint errors in $REL_PATH:\n$LINT_ERRORS"
+  # linter별 에러코드 추출
+  case "$LINTER" in
+    biome)  _add_codes $(echo "$LINT_RESULT" | awk '/━━/ {print $2}') ;;
+    eslint) _add_codes $(echo "$LINT_RESULT" | awk '/error/ {print $NF}') ;;
+  esac
 fi
 
 # 2. TypeScript type-check
@@ -80,6 +87,7 @@ if [ "$LANGUAGE" = "typescript" ]; then
   TS_RESULT=$(npx tsc --noEmit --pretty false 2>&1 | grep "$REL_PATH" | head -5) || true
   if [ -n "$TS_RESULT" ]; then
     CONTEXT="$CONTEXT\n⚠️ Type errors in $REL_PATH:\n$TS_RESULT"
+    _add_codes $(echo "$TS_RESULT" | grep -oE 'TS[0-9]+')
   fi
 fi
 
@@ -133,6 +141,7 @@ case "$REL_PATH" in
     fi
     if [ -n "$SEC" ]; then
       CONTEXT="$CONTEXT\n🔒 Solidity 보안 체크 ($REL_PATH):$SEC"
+      _add_codes $(printf '%s' "$SEC" | grep -oE 'SWC-[0-9]+')
     fi
     ;;
 
@@ -157,6 +166,7 @@ case "$REL_PATH" in
       fi
       if [ -n "$SEC" ]; then
         CONTEXT="$CONTEXT\n🔒 Rust/Anchor 보안 체크 ($REL_PATH):$SEC"
+        _add_codes $(printf '%s' "$SEC" | grep -oE 'unwrap|unchecked')
       fi
     fi
     ;;
@@ -171,6 +181,7 @@ case "$REL_PATH" in
     fi
     if [ -n "$SEC" ]; then
       CONTEXT="$CONTEXT\n🔒 Move 보안 체크 ($REL_PATH):$SEC"
+      _add_codes "no-assert-entry"
     fi
     ;;
 esac
@@ -220,7 +231,7 @@ fi
 # 메트릭 기록
 if [ -n "$CONTEXT" ]; then
   # 에러 코드 추출 (TS2322 등) → JSON 배열
-  ERROR_CODES=$(printf '%s' "$CONTEXT" | grep -oE 'TS[0-9]+|SWC-[0-9]+|unwrap|assert!' | sort -u | jq -Rsc 'split("\n") | map(select(. != ""))') || ERROR_CODES='[]'
+  ERROR_CODES=$(printf '%s' "$ECODES" | tr ' ' '\n' | sort -u | grep -v '^$' | jq -Rsc 'split("\n") | map(select(. != ""))') || ERROR_CODES='[]'
   _metric "error" "$REL_PATH" "$ERROR_CODES"
 else
   _metric "clean" "$REL_PATH"
@@ -252,7 +263,7 @@ if [ -n "$CONTEXT" ]; then
       *) echo "빌드/린트 에러 발생 — 수정 후 검증한다 ($f)" ;;
     esac
   }
-  for CODE in $(printf '%s' "$CONTEXT" | grep -oE 'TS[0-9]+|SWC-[0-9]+|unwrap|assert!' | sort -u); do
+  for CODE in $(printf '%s' "$ECODES" | tr ' ' '\n' | sort -u | grep -v '^$'); do
     RULE=$(_error_to_rule "$CODE" "$REL_PATH")
     # 중복 체크
     DUP=$(jq --arg r "$RULE" '.learnings[] | select(.rule == $r) | .id' "$LEARNINGS_FILE" 2>/dev/null || true)
@@ -282,7 +293,7 @@ if [ -n "$CONTEXT" ]; then
   }
   AUTOHARNESS_MSG=""
   EXISTING_RULES=$(jq -r '.rules.codingStandards[]?.id // empty' "$CONFIG" 2>/dev/null)
-  for CODE in $(printf '%s' "$CONTEXT" | grep -oE 'TS[0-9]+|SWC-[0-9]+' | sort -u); do
+  for CODE in $(printf '%s' "$ECODES" | tr ' ' '\n' | sort -u | grep -v '^$'); do
     CODE_COUNT=$(jq --arg c "$CODE" '[.learnings[] | select(.mistake == $c)] | length' "$LEARNINGS_FILE" 2>/dev/null || echo 0)
     if [ "$CODE_COUNT" -ge 3 ]; then
       RULE_JSON=$(_code_to_config_rule "$CODE")
