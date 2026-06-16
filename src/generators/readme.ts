@@ -114,10 +114,47 @@ export async function generateReadme(projectDir: string, choices: UserChoices): 
     lines.push('');
   }
 
-  // AI Agent
-  lines.push('## AI Agent');
+  // AI Agent Harness
+  lines.push('## AI Agent Harness');
   lines.push('');
-  lines.push(`이 프로젝트는 **${getAgentLabel(choices.agent)}** 에이전트 룰이 설정되어 있습니다.`);
+  lines.push(`이 프로젝트는 **${getAgentLabel(choices.agent)}** 에이전트 하네스가 설정되어 있습니다.`);
+  lines.push('Hook으로 코드 품질을 자동 강제합니다.');
+  lines.push('');
+  lines.push('| 시점 | 동작 |');
+  lines.push('|------|------|');
+  lines.push('| 파일 수정 전 | 허용 범위 밖 파일 차단 (`scope-guard`) |');
+  lines.push('| 파일 수정 후 | lint + 타입체크 + 보안검사 → 에러 시 자동 수정 (`post-write`) |');
+  lines.push('| 세션 시작 | 프로젝트 컨텍스트 + 메트릭 요약 주입 (`session-init`) |');
+  lines.push('| 세션 종료 | 빌드 + 테스트 + 코드 리뷰 (`stop-review`) |');
+  lines.push('');
+  lines.push('## 스킬');
+  lines.push('');
+  lines.push('### 이슈 기반 (Jira + Figma)');
+  lines.push('');
+  lines.push('```');
+  lines.push('/start <이슈번호> → 이슈 조회 → Figma 분석 → 구현 계획 → 구현');
+  lines.push('/done              → 품질 게이트 → 커밋 → MR 생성');
+  lines.push('```');
+  lines.push('');
+  lines.push('### 기획부터 (Jira/Figma 없이)');
+  lines.push('');
+  lines.push('```');
+  lines.push('/plan → /analyze → /design → /generate → 구현 → /done');
+  lines.push('```');
+  lines.push('');
+  lines.push('### 개별 스킬');
+  lines.push('');
+  lines.push('| 스킬 | 역할 |');
+  lines.push('|------|------|');
+  lines.push('| `/fetch-issue <이슈번호>` | Jira 이슈 조회 |');
+  lines.push('| `/branch <이슈번호>` | 이슈 기반 브랜치 생성 |');
+  lines.push('| `/figma <URL>` | Figma 디자인 분석 |');
+  lines.push('| `/lint` | lint + type-check |');
+  lines.push('| `/test` | 테스트 + self-heal |');
+  lines.push('| `/commit` | staged 기반 커밋 |');
+  lines.push('| `/create-mr` | push + MR 생성 |');
+  lines.push('| `/code-review` | 코드 리뷰 |');
+  lines.push('| `/metrics` | 하네스 메트릭 확인 |');
   lines.push('');
 
   // Graphify
