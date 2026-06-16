@@ -13,11 +13,11 @@ description: 브랜치 생성. `/branch <이슈번호>` 로 호출하면 이슈 
 | 이슈 타입 | prefix |
 |----------|--------|
 | Bug / Bugfix | `fix/` |
-| Feature / Story | `feature/` |
-| Chore / Task | `chore/` |
+| Feature / Story / Task | `feature/` |
+| Chore (설정/CI/배포) | `chore/` |
 | Refactor | `refactor/` |
 
-이슈 타입을 확인할 수 없으면 `feature/`를 기본값으로 사용한다.
+> "Task"는 대부분 구현이므로 `feature/`를 사용한다. 이슈 타입을 확인할 수 없으면 `feature/`를 기본값으로 사용한다.
 
 ### 2. 브랜치 생성
 

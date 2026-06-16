@@ -56,9 +56,11 @@ description: 이슈 기반 작업 시작. `/start ISSUE-123` 으로 호출하면
 | 이슈 타입 | prefix |
 |----------|--------|
 | Bug / Bugfix | `fix/` |
-| Feature / Story | `feature/` |
-| Chore / Task | `chore/` |
+| Feature / Story / Task | `feature/` |
+| Chore (설정/CI/배포) | `chore/` |
 | Refactor | `refactor/` |
+
+> Jira의 "Task"는 대부분 구현 작업이므로 `feature/`를 사용한다. `chore/`는 설정/CI/배포 등 비기능 작업에만 사용한다.
 
 이슈번호가 있으면 번호만으로, 없으면 설명으로 브랜치를 생성한다:
 
