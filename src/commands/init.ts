@@ -464,7 +464,7 @@ export async function initHarness(projectDir?: string): Promise<void> {
   const skillsSrc = path.join(TEMPLATES_DIR, 'skills');
   const agentConfig = AGENTS.find((a) => a.value === agent);
   const skillsDest = agentConfig
-    ? path.join(root, agentConfig.dir === '.github' ? '.github/skills' : `${agentConfig.dir}/skills`)
+    ? path.join(root, `${agentConfig.dir}/skills`)
     : path.join(root, '.agents/skills');
 
   // common + workflow는 항상 (하위 디렉토리 구조 보존)

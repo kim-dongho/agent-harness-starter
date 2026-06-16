@@ -122,8 +122,8 @@ async function writeGraphifyConfig(projectDir: string): Promise<void> {
 function getGraphifyAgentCmd(agent: AgentValue): string | null {
   switch (agent) {
     case 'claude': return 'graphify claude install';
-    case 'cursor': return 'graphify cursor install';
     case 'gemini': return 'graphify gemini install';
+    case 'codex': return 'graphify codex install';
     default: return null;
   }
 }

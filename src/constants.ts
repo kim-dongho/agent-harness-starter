@@ -8,11 +8,6 @@
 /** 지원하는 AI 에이전트 목록 (value, label, 설정 디렉토리) */
 export const AGENTS = [
   { value: 'claude', label: 'Claude Code', dir: '.claude' },
-  { value: 'cursor', label: 'Cursor', dir: '.cursor' },
-  { value: 'windsurf', label: 'Windsurf', dir: '.windsurf' },
-  { value: 'cline', label: 'Cline', dir: '.cline' },
-  { value: 'copilot', label: 'GitHub Copilot', dir: '.github' },
-  { value: 'aider', label: 'Aider', dir: '.aider' },
   { value: 'gemini', label: 'Gemini CLI', dir: '.gemini' },
   { value: 'codex', label: 'OpenAI Codex CLI', dir: '.codex' },
 ] as const;
