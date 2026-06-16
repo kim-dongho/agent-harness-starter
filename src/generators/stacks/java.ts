@@ -120,5 +120,5 @@ tasks.withType<Test> {
 `);
   }
 
-  await fs.writeFile(path.join(dir, '.gitignore'), 'build/\ntarget/\n.gradle/\n*.class\n.env\n.harness\n');
+  await fs.writeFile(path.join(dir, '.gitignore'), 'build/\ntarget/\n.gradle/\n*.class\n.env\n');
 }
