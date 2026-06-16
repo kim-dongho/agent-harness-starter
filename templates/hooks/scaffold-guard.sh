@@ -110,18 +110,17 @@ esac
 FILENAME=$(basename "$REL_PATH" | sed 's/\.[^.]*$//')
 EXT=$(basename "$REL_PATH" | grep -o '\.[^.]*$' || true)
 
-# 파일 타입 판별
-FILE_TYPE=""
-case "$REL_PATH" in
-  *components/*|*ui/*|*widgets/*|*presentation/*) FILE_TYPE="components" ;;
-  *hooks/*)     FILE_TYPE="hooks" ;;
-  *utils/*|*lib/*) FILE_TYPE="utils" ;;
-  *services/*|*api/*|*application/*) FILE_TYPE="services" ;;
-  *models/*|*domain/*|*entities/*) FILE_TYPE="models" ;;
-esac
+# fileNaming 규칙 조회 — 모노레포: apps/<app> 기준, 폴리레포: convention 필드
+NAMING_RULE=""
+APP_DIR=$(echo "$REL_PATH" | sed -n 's#^apps/\([^/]*\)/.*#\1#p')
+if [ -n "$APP_DIR" ]; then
+  NAMING_RULE=$(jq -r ".rules.fileNaming.\"${APP_DIR}\" // empty" "$CONFIG" 2>/dev/null)
+fi
+if [ -z "$NAMING_RULE" ]; then
+  NAMING_RULE=$(jq -r '.rules.fileNaming.convention // empty' "$CONFIG" 2>/dev/null)
+fi
 
-if [ -n "$FILE_TYPE" ]; then
-  NAMING_RULE=$(jq -r ".rules.fileNaming.${FILE_TYPE} // empty" "$CONFIG" 2>/dev/null)
+if [ -n "$NAMING_RULE" ]; then
 
   if [ -n "$NAMING_RULE" ]; then
     IS_VALID="yes"

@@ -14,6 +14,7 @@ import {
   JS_LINTERS,
   NAMING_CONVENTIONS,
   ISSUE_TRACKERS,
+  getStackCategory,
   type AgentValue,
   type RepoStructure,
   type StackValue,
@@ -256,12 +257,16 @@ async function promptMonorepoStacks(
     if (cancelled(lint)) return null;
     linter = lint as string;
 
-    const naming = await p.select({
-      message: '파일 네이밍 규칙을 선택하세요 (루트 공통)',
-      options: NAMING_CONVENTIONS.map((n) => ({ value: n.value, label: n.label })),
-    });
-    if (cancelled(naming)) return null;
-    namingConvention = naming as string;
+    // FE 스택이 있을 때만 네이밍 질문 — Go/Java/Python/Rust/Blockchain은 언어 규약으로 강제
+    const hasFe = stacks.some((s) => getStackCategory(s as any) === 'frontend');
+    if (hasFe) {
+      const naming = await p.select({
+        message: '파일 네이밍 규칙을 선택하세요 (FE 스택)',
+        options: NAMING_CONVENTIONS.map((n) => ({ value: n.value, label: n.label })),
+      });
+      if (cancelled(naming)) return null;
+      namingConvention = naming as string;
+    }
   }
 
   return {

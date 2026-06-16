@@ -140,6 +140,19 @@ function getDefaultTestRunner(config: { stack: string; testFramework?: string })
   return defaults[config.stack] ?? 'vitest';
 }
 
+/** 스택 카테고리별 강제 파일 네이밍 — 언어 규약으로 결정되는 것은 선택 불가 */
+function getFileNaming(stack: string, userNaming?: string): string {
+  const category = getStackCategory(stack as any);
+  const forced: Record<string, string> = {
+    go: 'snake_case',
+    python: 'snake_case',
+    rust: 'snake_case',
+    java: 'PascalCase',
+    blockchain: 'PascalCase',
+  };
+  return forced[category] ?? userNaming ?? 'camelCase';
+}
+
 /** 스택 → 앱 디렉토리명 매핑 */
 function toAppDir(stack: string): string {
   const map: Record<string, string> = {
@@ -221,14 +234,15 @@ export async function generateHarnessConfig(projectDir: string, choices: UserCho
       adapters: [toAdapter(choices.agent)],
     },
     rules: {
-      fileNaming: {
-        components: (choices.namingConvention ?? 'PascalCase') as string,
-        hooks: (choices.namingConvention ?? 'camelCase') as string,
-        utils: (choices.namingConvention ?? 'camelCase') as string,
-        services: (choices.namingConvention ?? 'camelCase') as string,
-        models: (choices.namingConvention ?? 'camelCase') as string,
-        testSuffix: '.test',
-      },
+      fileNaming: isMulti
+        ? Object.fromEntries(stacks.map((s) => {
+            const naming = getFileNaming(s.stack, choices.namingConvention);
+            return [toAppDir(s.stack), naming];
+          })) as unknown as any
+        : {
+            convention: getFileNaming(choices.stack, choices.namingConvention),
+            testSuffix: '.test',
+          },
       codingStandards: [
         { id: 'no-hardcoded-secrets', description: '시크릿/크리덴셜을 코드에 하드코딩하지 않는다 — 환경변수를 사용한다', severity: 'error' as const },
         { id: 'no-console-log', description: 'console.log를 디버깅 용도로 남기지 않는다 — 구조화된 로거를 사용한다', severity: 'error' as const },
