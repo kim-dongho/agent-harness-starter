@@ -99,6 +99,14 @@ if [ -n "$SUGGESTION" ]; then
 fi
 
 # ── fileNaming 검증 — 새 파일의 이름이 config 규칙에 맞는지 확인 ──
+# 언어 규약으로 강제되는 파일명 패턴은 스킵
+case "$(basename "$REL_PATH")" in
+  *_test.go|*_test.rs)   exit 0 ;; # Go/Rust 테스트
+  test_*.py|conftest.py) exit 0 ;; # Python 테스트
+  mod.rs|lib.rs|main.rs) exit 0 ;; # Rust 필수 파일
+  *.module.css|*.module.scss) exit 0 ;; # CSS Module
+  __init__.py)           exit 0 ;; # Python 패키지
+esac
 FILENAME=$(basename "$REL_PATH" | sed 's/\.[^.]*$//')
 EXT=$(basename "$REL_PATH" | grep -o '\.[^.]*$' || true)
 
