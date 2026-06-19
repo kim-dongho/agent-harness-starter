@@ -467,11 +467,25 @@ export async function initHarness(projectDir?: string): Promise<void> {
     ? path.join(root, `${agentConfig.dir}/skills`)
     : path.join(root, '.agents/skills');
 
-  // common + workflow는 항상 (하위 디렉토리 구조 보존)
-  for (const dir of ['common', 'workflow']) {
-    const src = path.join(skillsSrc, dir);
-    if (await fs.pathExists(src)) {
-      await fs.copy(src, path.join(skillsDest, dir), { overwrite: false });
+  // common은 하위 폴더를 skills/ 바로 아래로 플랫하게 복사
+  const commonSrc = path.join(skillsSrc, 'common');
+  if (await fs.pathExists(commonSrc)) {
+    const commonEntries = await fs.readdir(commonSrc, { withFileTypes: true });
+    for (const entry of commonEntries) {
+      if (entry.isDirectory()) {
+        await fs.copy(path.join(commonSrc, entry.name), path.join(skillsDest, entry.name), { overwrite: false });
+      }
+    }
+  }
+
+  // workflow는 하위 폴더를 skills/ 바로 아래로 플랫하게 복사
+  const wfSrc = path.join(skillsSrc, 'workflow');
+  if (await fs.pathExists(wfSrc)) {
+    const wfEntries = await fs.readdir(wfSrc, { withFileTypes: true });
+    for (const entry of wfEntries) {
+      if (entry.isDirectory()) {
+        await fs.copy(path.join(wfSrc, entry.name), path.join(skillsDest, entry.name), { overwrite: false });
+      }
     }
   }
 

@@ -74,11 +74,16 @@ async function copySkills(projectDir: string, stacks: string[], agent: AgentValu
 
   let fileCount = 0;
 
-  // common은 항상 복사
+  // common은 하위 폴더를 skills/ 바로 아래로 플랫하게 복사
   const commonSrc = path.join(skillsSrc, 'common');
   if (await fs.pathExists(commonSrc)) {
-    await fs.copy(commonSrc, skillsDest);
-    fileCount += await countFiles(commonSrc);
+    const commonEntries = await fs.readdir(commonSrc, { withFileTypes: true });
+    for (const entry of commonEntries) {
+      if (entry.isDirectory()) {
+        await fs.copy(path.join(commonSrc, entry.name), path.join(skillsDest, entry.name), { overwrite: false });
+        fileCount += await countFiles(path.join(commonSrc, entry.name));
+      }
+    }
   }
 
   // 스택 카테고리별 skills 복사
@@ -92,11 +97,16 @@ async function copySkills(projectDir: string, stacks: string[], agent: AgentValu
     }
   }
 
-  // workflow skills는 항상 복사
+  // workflow skills는 항상 복사 — workflow/ 하위를 skills/ 바로 아래로 플랫하게 복사
   const wfSrc = path.join(skillsSrc, 'workflow');
   if (await fs.pathExists(wfSrc)) {
-    await fs.copy(wfSrc, skillsDest, { overwrite: false });
-    fileCount += await countFiles(wfSrc);
+    const wfEntries = await fs.readdir(wfSrc, { withFileTypes: true });
+    for (const entry of wfEntries) {
+      if (entry.isDirectory()) {
+        await fs.copy(path.join(wfSrc, entry.name), path.join(skillsDest, entry.name), { overwrite: false });
+        fileCount += await countFiles(path.join(wfSrc, entry.name));
+      }
+    }
   }
 
   return fileCount;
