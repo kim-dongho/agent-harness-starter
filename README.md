@@ -106,22 +106,15 @@ Solidity (Hardhat) · Solidity (Foundry) · Solana (Anchor) · Move (Sui)
 
 ## 지원 에이전트
 
-8개 에이전트를 지원합니다. hook 스크립트는 동일하고, 환경변수 폴백으로 자동 호환됩니다.
+3개 에이전트를 지원합니다. hook 스크립트는 동일하고, 환경변수 폴백으로 자동 호환됩니다.
 
 ### 에이전트별 Hook 설정
 
-| 에이전트       | Hooks | 설정 파일                    | Pre/Post 매핑            |
-| -------------- | :---: | ---------------------------- | ------------------------ |
-| Claude Code    |   O   | `.claude/settings.json`      | PreToolUse / PostToolUse |
-| Gemini CLI     |   O   | `.gemini/settings.json`      | BeforeTool / AfterTool   |
-| Cursor         |   O   | `.cursor/hooks.json`         | onPreEdit / onPostEdit   |
-| Windsurf       |   O   | `.windsurf/hooks.json`       | pre-action / post-action |
-| Cline          |   O   | `.clinerules/hooks.json`     | PreToolUse / PostToolUse |
-| GitHub Copilot |   O   | `.github/hooks/harness.json` | preToolUse / postToolUse |
-| Codex CLI      |  \*   | `.codex/hooks.json`          | PreToolUse / PostToolUse |
-| Aider          |   -   | `.aider.conf.yml`            | lint-cmd only            |
-
-\* Codex CLI: `apply_patch` hook 지원 (최신 버전 필요)
+| 에이전트    | Hooks | 설정 파일               | Pre/Post 매핑            |
+| ----------- | :---: | ----------------------- | ------------------------ |
+| Claude Code |   O   | `.claude/settings.json` | PreToolUse / PostToolUse |
+| Gemini CLI  |   O   | `.gemini/settings.json` | BeforeTool / AfterTool   |
+| Codex CLI   |   O   | `.codex/hooks.json`     | PreToolUse / PostToolUse |
 
 > **Claude Code에서 가장 완전하게 동작합니다.** PostToolUse의 `additionalContext`를 에이전트 컨텍스트에 자동 주입하여 self-heal 자동 수정, AutoHarness 규칙 추가가 에이전트 루프 안에서 자동으로 처리됩니다. 다른 에이전트는 hook 실행 + 메트릭 수집은 되지만 자동 수정 지시 전달 방식이 에이전트마다 다릅니다.
 
@@ -169,13 +162,13 @@ npx agent-harness-starter@latest init  # 두 번째: Gemini
 
 ### `/done` 품질 게이트
 
-| Gate | 스킬 | 검증 항목 |
-|------|------|----------|
-| 1 | `/lint` | lint + type-check |
-| 2 | `/test` | 테스트 실행 (실패 시 3회 self-heal 루프) |
-| 3 | — | 정책 키워드 변경 시 테스트 존재 확인 |
-| 4 | — | 의도하지 않은 파일 변경 없는지 확인 |
-| 5 | — | 불필요 파일(.env 등) 제외 |
+| Gate | 스킬    | 검증 항목                                |
+| ---- | ------- | ---------------------------------------- |
+| 1    | `/lint` | lint + type-check                        |
+| 2    | `/test` | 테스트 실행 (실패 시 3회 self-heal 루프) |
+| 3    | —       | 정책 키워드 변경 시 테스트 존재 확인     |
+| 4    | —       | 의도하지 않은 파일 변경 없는지 확인      |
+| 5    | —       | 불필요 파일(.env 등) 제외                |
 
 5단계 모두 통과 → `/commit` → `/create-mr` → GitLab MR 자동 생성
 
@@ -183,28 +176,28 @@ npx agent-harness-starter@latest init  # 두 번째: Gemini
 
 파이프라인의 각 단계를 독립적으로 사용할 수 있습니다.
 
-| 스킬 | 역할 |
-|------|------|
-| `/fetch-issue <이슈번호>` | Jira 이슈 조회 |
-| `/branch <이슈번호>` | 이슈 기반 브랜치 생성 |
-| `/figma <URL>` | Figma 디자인 분석 (토큰 절약 전략 내장) |
-| `/lint` | lint + type-check |
-| `/test` | 테스트 + self-heal 3회 루프 |
-| `/commit` | staged 기반 커밋 (브랜치에서 이슈번호 자동 추출) |
-| `/create-mr` | push + GitLab MR 생성 |
-| `/code-review` | 코드 리뷰 |
-| `/metrics` | 하네스 메트릭 확인 |
+| 스킬                      | 역할                                             |
+| ------------------------- | ------------------------------------------------ |
+| `/fetch-issue <이슈번호>` | Jira 이슈 조회                                   |
+| `/branch <이슈번호>`      | 이슈 기반 브랜치 생성                            |
+| `/figma <URL>`            | Figma 디자인 분석 (토큰 절약 전략 내장)          |
+| `/lint`                   | lint + type-check                                |
+| `/test`                   | 테스트 + self-heal 3회 루프                      |
+| `/commit`                 | staged 기반 커밋 (브랜치에서 이슈번호 자동 추출) |
+| `/create-mr`              | push + GitLab MR 생성                            |
+| `/code-review`            | 코드 리뷰                                        |
+| `/metrics`                | 하네스 메트릭 확인                               |
 
 ### 외부 서비스 연동
 
 프로젝트 루트의 `.env`에 설정합니다 (`.env.example` 참고).
 
-| 서비스 | 환경변수 | 용도 |
-|--------|---------|------|
-| Jira Cloud | `JIRA_BASE_URL`, `JIRA_USER_EMAIL`, `JIRA_API_TOKEN` | `/start` 이슈 조회 + 상태 변경 |
-| GitLab | `GITLAB_URL`, `GITLAB_TOKEN` | `/done` MR 생성 |
-| GitLab 프로젝트 | `GITLAB_PROJECT_ID` (선택) | git remote에서 자동 감지, 실패 시 fallback |
-| Figma | MCP 연동 | `/start`에서 기획/디자인 링크 자동 분석 |
+| 서비스          | 환경변수                                             | 용도                                       |
+| --------------- | ---------------------------------------------------- | ------------------------------------------ |
+| Jira Cloud      | `JIRA_BASE_URL`, `JIRA_USER_EMAIL`, `JIRA_API_TOKEN` | `/start` 이슈 조회 + 상태 변경             |
+| GitLab          | `GITLAB_URL`, `GITLAB_TOKEN`                         | `/done` MR 생성                            |
+| GitLab 프로젝트 | `GITLAB_PROJECT_ID` (선택)                           | git remote에서 자동 감지, 실패 시 fallback |
+| Figma           | MCP 연동                                             | `/start`에서 기획/디자인 링크 자동 분석    |
 
 > **GitLab 프로젝트 감지**: `git remote get-url origin`에서 `group/project` 경로를 자동 추출합니다 (SSH/HTTPS 둘 다 지원). remote가 없는 경우 `.env`의 `GITLAB_PROJECT_ID`를 사용합니다.
 
@@ -371,14 +364,11 @@ npm version major && npm run publish:github   # 0.2.0 → 1.0.0 (Breaking Change
 
 ### 에이전트 Hooks 문서
 
-| 에이전트       | 문서                                                                |
-| -------------- | ------------------------------------------------------------------- |
-| Claude Code    | [Hooks Guide](https://docs.anthropic.com/en/docs/claude-code/hooks) |
-| Gemini CLI     | [Hooks Reference](https://geminicli.com/docs/hooks/reference/)      |
-| Codex CLI      | [Hooks](https://developers.openai.com/codex/hooks)                  |
-| Cursor         | [Hooks](https://cursor.com/docs/hooks)                              |
-| Cline          | [Hooks](https://docs.cline.bot/customization/hooks)                 |
-| GitHub Copilot | [Hooks](https://docs.github.com/en/copilot/concepts/agents/hooks)   |
+| 에이전트    | 문서                                                                |
+| ----------- | ------------------------------------------------------------------- |
+| Claude Code | [Hooks Guide](https://docs.anthropic.com/en/docs/claude-code/hooks) |
+| Gemini CLI  | [Hooks Reference](https://geminicli.com/docs/hooks/reference/)      |
+| Codex CLI   | [Hooks](https://developers.openai.com/codex/hooks)                  |
 
 ### 블록체인 보안 룰 출처
 
