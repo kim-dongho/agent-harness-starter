@@ -2,6 +2,8 @@
 
 # agent-harness-starter
 
+[![npm version](https://img.shields.io/npm/v/agent-harness-starter.svg)](https://www.npmjs.com/package/agent-harness-starter)
+
 AI 코딩 에이전트를 자동으로 제어하는 하네스 시스템
 
 **Hooks**로 강제 · **Rules**로 안내 · **Learnings**로 학습 · **Metrics**로 측정
