@@ -32,8 +32,6 @@ graph LR
     E --> F[측정<br/>metrics]
     D -->|반복 loop| C
 
-    style D fill:#c8b6ff,stroke:#7b61ff
-    style B fill:#ffb6c1,stroke:#ff6b81
 ```
 
 ---

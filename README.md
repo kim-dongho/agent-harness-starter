@@ -31,9 +31,6 @@ graph LR
     D --> E[Learn<br/>learnings]
     E --> F[Measure<br/>metrics]
     D -->|loop| C
-
-    style D fill:#c8b6ff,stroke:#7b61ff
-    style B fill:#ffb6c1,stroke:#ff6b81
 ```
 
 ---
