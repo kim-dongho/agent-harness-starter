@@ -23,9 +23,18 @@ When AI coding agents (Claude Code, Gemini CLI, etc.) write code, this harness s
 - **Self-healing tracking** — Tracks whether agents detect and fix their own errors
 - **3 agents supported** — Same hook scripts work across all agents
 
-<p align="center">
-  <img src="docs/harness-flow.excalidraw.png" alt="Harness Flow" width="800">
-</p>
+```mermaid
+graph LR
+    A[File Edit] --> B[Block<br/>scope/scaffold]
+    B --> C[Validate<br/>lint · type · security]
+    C --> D[Self-heal]
+    D --> E[Learn<br/>learnings]
+    E --> F[Measure<br/>metrics]
+    D -->|loop| C
+
+    style D fill:#c8b6ff,stroke:#7b61ff
+    style B fill:#ffb6c1,stroke:#ff6b81
+```
 
 ---
 
