@@ -4,8 +4,8 @@
  * @fileoverview agent-harness-starter CLI 진입점
  *
  * 사용법:
- *   npx @frontend-playground/agent-harness-starter [project-name]  — 새 프로젝트 생성
- *   npx @frontend-playground/agent-harness-starter init             — 기존 프로젝트에 하네스 세팅
+ *   npx agent-harness-starter [project-name]  — 새 프로젝트 생성
+ *   npx agent-harness-starter init             — 기존 프로젝트에 하네스 세팅
  */
 import { Command } from 'commander';
 import { runPrompts } from './prompts/index.js';
